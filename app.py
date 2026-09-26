@@ -6360,7 +6360,8 @@ def api_skills_import():
     description = str(request.form.get('description') or '').strip()
     stages_raw = str(request.form.get('stages') or 'video_prompt')
     stages = [x for x in stages_raw.split(',') if x in ('script', 'video_prompt', 'asset', 'review', 'compose')]
-    filename = f"custom_{uuid.uuid4().hex[:12]}_{re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'}{ext}"
+    safe_name = re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
+    filename = f"custom_{uuid.uuid4().hex[:12]}_{safe_name}{ext}"
     with open(os.path.join(CUSTOM_SKILLS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(content)
     index = _读取技能索引()
