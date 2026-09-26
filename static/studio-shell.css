@@ -1,0 +1,954 @@
+body.studio-production {
+  background: #151719;
+  color: #ecece8;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Microsoft YaHei",
+    sans-serif;
+  font-size: 14px;
+}
+.studio-production .studio-legacy-header {
+  display: none;
+}
+.studio-production .workspace-grid {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) 290px;
+  gap: 0;
+  padding: 0;
+  max-width: 1800px;
+  margin: 0 auto;
+  min-height: 100vh;
+  border: 1px solid #323639;
+}
+.studio-production .workspace-sidebar {
+  position: static;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  padding: 24px 18px;
+  background: #1d2023;
+}
+.studio-production .left {
+  border-right: 1px solid #323639;
+}
+.studio-production .right {
+  border-left: 1px solid #323639;
+}
+/* The monitor owns its scrolling; editing the document never moves it away. */
+.studio-production .workspace-sidebar.right {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-top: 0;
+}
+.studio-production .workspace-sidebar.right .studio-monitor-title {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin-bottom: 0;
+  padding: 20px 0;
+  background: #1d2023;
+  border-bottom: 1px solid #323639;
+}
+.studio-production button,
+.studio-production input,
+.studio-production select,
+.studio-production textarea {
+  font: inherit;
+}
+.studio-production button {
+  cursor: pointer;
+  border-radius: 9px;
+}
+.studio-production button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.studio-production button:focus-visible,
+.studio-production select:focus-visible {
+  outline: 2px solid #cfb27b;
+  outline-offset: 3px;
+}
+.studio-production .glass,
+.studio-production .soft-panel {
+  background: #1d2023;
+  border: 1px solid #323639;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.studio-production .btn-gold {
+  background: #cfb27b;
+  color: #282216;
+  border: 0;
+  box-shadow: none;
+}
+.studio-production .gold {
+  color: #cfb27b;
+}
+.studio-production .tag {
+  background: #282c2d;
+  color: #d7c19b;
+  border: 0;
+}
+.studio-production .studio-workspace {
+  min-width: 0;
+}
+.studio-production main {
+  padding: 28px;
+  min-width: 0;
+}
+.studio-production .studio-top {
+  padding: 22px 28px;
+  min-height: 88px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  background: #1d2023;
+  border-bottom: 1px solid #323639;
+}
+.studio-production .studio-top-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 12px;
+}
+.studio-production .studio-top button,
+.studio-production .studio-monitor-title button,
+.studio-production .studio-custom-page button,
+.studio-production .studio-settings-tabs button,
+.studio-production .studio-works-tabs button,
+.studio-production .studio-error button {
+  border: 1px solid #323639;
+  background: transparent;
+  padding: 10px 14px;
+}
+
+.studio-work-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+.studio-work-search,
+.studio-work-filter {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 5px;
+  background: rgba(0,0,0,.18);
+  color: inherit;
+  padding: 6px 7px;
+  font-size: 12px;
+}
+.studio-work-search::placeholder { color: rgba(255,255,255,.42); }
+.studio-all-works button small[data-state="error"] { color: #fca5a5; }
+.studio-production .studio-crumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  color: #d7c19b;
+}
+.studio-production .studio-brand {
+  font-size: 26px;
+  font-weight: 600;
+  color: #cfb27b;
+  margin: 6px 12px 30px;
+}
+.studio-production .studio-nav-label {
+  font-size: 12px;
+  color: #9ba29e;
+  margin: 26px 10px 12px;
+}
+.studio-production .studio-nav-button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  margin: 4px 0;
+}
+.studio-production [aria-current="page"],
+.studio-production [aria-current="step"] {
+  background: #282c2d !important;
+  box-shadow: inset 2px 0 #cfb27b;
+}
+.studio-production .studio-navigation select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #323639;
+  border-radius: 8px;
+  background: #151719;
+  min-width: 0;
+}
+.studio-production .studio-episode-tree {
+  border-left: 1px solid #323639;
+  margin: 16px 0;
+  padding-left: 8px;
+}
+.studio-production .studio-episode-tree button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 12px;
+  width: 100%;
+  background: none;
+  border: 0;
+  overflow-wrap: anywhere;
+}
+.studio-production .studio-episode-tree small {
+  font-size: 12px;
+  color: #a0a59e;
+}
+.studio-production .studio-stage-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 22px;
+  border-bottom: 1px solid #323639;
+}
+.studio-production .studio-stage-tabs button {
+  padding: 10px;
+  background: none;
+  border: 0;
+  color: #b4b9b2;
+  font-size: 13px;
+}
+.studio-production .studio-stage-off {
+  display: none !important;
+}
+.studio-production .studio-empty {
+  padding: 40px 20px;
+  color: #a0a59e;
+  text-align: center;
+}
+.studio-production .studio-dock {
+  padding: 28px;
+  min-width: 0;
+}
+.studio-production .studio-page {
+  position: static !important;
+  inset: auto !important;
+  background: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  max-width: none !important;
+  z-index: auto !important;
+}
+.studio-production .studio-page > div {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  min-width: 0;
+}
+.studio-production .studio-page h3 {
+  font-size: 21px;
+}
+.studio-production #episode-manager-modal > div > div:nth-child(2) {
+  display: block;
+}
+.studio-production #episode-manager-modal aside {
+  display: none;
+}
+.studio-production #manager-episode-list {
+  overflow: visible;
+  max-height: none;
+}
+.studio-production .studio-page .grid {
+  max-width: 100%;
+}
+.studio-production .studio-monitor-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+.studio-production .studio-monitor-title h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.studio-production .studio-monitor-section {
+  padding: 18px 0;
+  border-bottom: 1px solid #323639;
+  overflow-wrap: anywhere;
+}
+.studio-production .studio-monitor-section h3 {
+  font-size: 16px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+.studio-production .studio-monitor-section p {
+  margin: 12px 0;
+  color: #b7bcb5;
+  font-size: 13px;
+}
+.studio-production progress {
+  width: 100%;
+  height: 7px;
+  accent-color: #cfb27b;
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.studio-production progress::-webkit-progress-bar {
+  background: #323639;
+}
+.studio-production progress::-webkit-progress-value {
+  background: #cfb27b;
+}
+.studio-production .studio-error {
+  padding: 14px;
+  background: #352624;
+  border-radius: 10px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.studio-production .studio-error button {
+  padding: 8px;
+  margin: 4px;
+}
+.studio-production .studio-queue {
+  padding: 18px 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.studio-production .pipeline-sidebar {
+  display: block !important;
+  background: none;
+  border: 0;
+  padding: 18px 0;
+  margin: 0;
+}
+.studio-production .pipeline-sidebar h2 {
+  font-size: 14px;
+}
+.studio-production .pipeline-sidebar > h3 {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+.studio-production #log {
+  height: 240px;
+  background: #151719;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.studio-production .studio-settings-tabs,
+.studio-production .studio-works-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.studio-production .studio-service-choice {
+  margin: 18px 0 24px;
+}
+.studio-production [data-settings-page] {
+  padding: 22px;
+  background: #1d2023;
+  border: 1px solid #323639;
+  border-radius: 12px;
+}
+.studio-production .studio-monitor-hidden {
+  grid-template-columns: 230px minmax(0, 1fr);
+}
+.studio-production .studio-monitor-hidden > .right {
+  display: none;
+}
+.studio-production [hidden] {
+  display: none !important;
+}
+.studio-production .studio-custom-page button {
+  margin: 8px;
+}
+.studio-production .studio-custom-page h2 {
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+@media (max-width: 1150px) {
+  .studio-production .workspace-grid {
+    grid-template-columns: 190px minmax(0, 1fr) 250px;
+  }
+  .studio-production main,
+  .studio-production .studio-dock {
+    padding: 18px;
+  }
+  .studio-production #shot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .studio-production .studio-monitor-hidden {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+}
+@media (max-width: 950px) {
+  .studio-production .workspace-grid {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+  .studio-production .right {
+    grid-column: 2;
+    border-top: 1px solid #323639;
+    border-left: 0;
+  }
+  .studio-production .workspace-sidebar.right {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(340px, 92vw);
+    z-index: 80;
+    border-top: 0;
+    border-left: 1px solid #323639;
+    box-shadow: -12px 0 32px #0006;
+  }
+  .studio-production .left {
+    grid-row: 1 / span 2;
+  }
+  .studio-production .studio-page .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-production .studio-monitor-hidden {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .studio-production .workspace-grid,
+  .studio-production .studio-monitor-hidden {
+    display: flex;
+    flex-direction: column;
+  }
+  .studio-production .left {
+    order: 0;
+    padding: 12px;
+  }
+  .studio-production .studio-workspace {
+    order: 1;
+    width: 100%;
+  }
+  .studio-production .right {
+    order: 2;
+  }
+  .studio-production .studio-brand {
+    margin: 4px 8px 12px;
+    font-size: 20px;
+  }
+  .studio-production .studio-navigation {
+    max-height: 240px;
+    overflow: auto;
+  }
+  .studio-production .studio-top {
+    padding: 14px;
+  }
+  .studio-production #shot-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-production .studio-dock {
+    padding: 14px;
+  }
+  .studio-production input,
+  .studio-production select,
+  .studio-production textarea {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .studio-production .studio-page .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.studio-production #pipeline-box.pipeline-sidebar {
+  background: transparent;
+  border: 0;
+  padding: 20px 0;
+}
+.studio-production .studio-manager-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin: 18px 0 32px;
+}
+.studio-production #manager-series-title {
+  font-size: 28px;
+  line-height: 1.4;
+}
+.studio-production #manager-series-summary {
+  font-size: 14px;
+  margin-top: 10px;
+}
+.studio-production .studio-manager-hero > button {
+  background: #cfb27b;
+  color: #282216;
+  padding: 14px 18px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.studio-production .studio-batch-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #323639;
+}
+.studio-production .studio-batch-actions button {
+  padding: 14px 18px;
+  font-size: 14px;
+}
+.studio-production .manager-episode-row {
+  padding: 22px 18px;
+  background: #1d2023;
+  border-color: #323639;
+  margin-top: 12px;
+}
+.studio-production .manager-episode-row button,
+.studio-production #manager-selected-count + button {
+  padding: 10px 14px;
+  border: 1px solid #323639;
+  background: transparent;
+  color: #ecece8;
+  border-radius: 9px;
+}
+.studio-production .manager-episode-row .grid {
+  grid-template-columns: auto 56px minmax(0, 1fr) 85px auto;
+}
+.studio-production .manager-episode-row .font-bold {
+  font-size: 16px;
+}
+@media (max-width: 1100px) {
+  .studio-production .manager-episode-row .grid {
+    grid-template-columns: auto 56px minmax(0, 1fr);
+  }
+  .studio-production .manager-episode-row .grid > div:last-child {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+  }
+}
+/* Script review belongs to story; asset controls remain in the asset stage. */
+.studio-production
+  main[data-stage="0"]
+  #script-box
+  > :not(#script-summary):not(#script-review-bar) {
+  display: none;
+}
+.studio-production #studio-asset-controls > h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+.studio-production #studio-asset-controls > label {
+  margin: 14px 0;
+  font-size: 14px;
+}
+.studio-production #studio-asset-controls > button {
+  margin-top: 8px;
+}
+.studio-production .studio-step-footer {
+  padding: 24px 0;
+  margin-top: 24px;
+  border-top: 1px solid #323639;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.studio-production .studio-step-footer p {
+  color: #a0a59e;
+}
+.studio-production #script-confirm-btn,
+.studio-production #btn-assets-continue,
+.studio-production #btn-shots-continue {
+  display: none;
+}
+.studio-production main[data-stage="2"] #shots-confirm-bar {
+  display: none;
+}
+.studio-production .studio-heading {
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.studio-production .studio-top {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(21,23,25,.96);
+  backdrop-filter: blur(12px);
+}
+.studio-production .studio-stage-tabs {
+  position: static;
+}
+.studio-production .studio-current-title {
+  margin: 0;
+  max-width: min(42vw, 560px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 23px;
+  line-height: 1.25;
+  font-weight: 650;
+  color: #f1eee7;
+}
+.studio-production .studio-current-title:empty {
+  display: none;
+}
+.studio-production .studio-episode-tree [data-current="true"] {
+  background: #282c2d;
+  box-shadow: inset 2px 0 #cfb27b;
+}
+@media (max-width: 620px) {
+  .studio-production .studio-top { grid-template-columns: 1fr; }
+  .studio-production .studio-top > .studio-header-tools,
+  .studio-production .studio-top > .studio-top-actions,
+  .studio-production .studio-top > .studio-heading { grid-column:1; }
+  .studio-production .studio-top > .studio-top-actions { grid-row:2; justify-content:flex-start; }
+  .studio-production .studio-top > .studio-heading { grid-row:3; text-align:left; justify-content:flex-start; }
+  .studio-production .studio-heading { flex-wrap: wrap; gap: 3px 8px; }
+  .studio-production .studio-current-title {
+    font-size: 18px;
+    max-width: 90vw;
+  }
+}
+.studio-production .studio-stage-tabs button:disabled{color:#737875;opacity:.45;cursor:not-allowed;background:transparent!important;box-shadow:none}
+.studio-production .studio-all-works{max-height:min(58vh,620px);min-height:180px;overflow-y:auto;overscroll-behavior:contain;padding-right:3px}
+.studio-production .studio-all-works button{display:flex;flex-direction:column;gap:5px;width:100%;padding:12px;text-align:left;background:transparent;border:0;margin:3px 0}
+.studio-production .studio-all-works span{overflow-wrap:anywhere}
+.studio-production .studio-all-works small,.studio-production .studio-all-works p{color:#9ba29e;font-size:12px}
+.studio-production .studio-work-group-title{margin:12px 4px 4px;color:#8f9891;font-size:11px;font-weight:700;letter-spacing:.04em}
+.studio-production .studio-work-line{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:38px;padding:8px 10px;border-radius:5px;cursor:pointer}
+.studio-production .studio-work-line:hover{background:rgba(255,255,255,.06)}
+.studio-production .studio-work-line span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e5ebe7}
+.studio-production .studio-work-line span[data-state="error"],
+.studio-production .studio-work-episode span[data-state="error"]{color:#fca5a5}
+.studio-production .studio-work-line span[data-state="done"],
+.studio-production .studio-work-episode span[data-state="done"]{color:#86efac}
+.studio-production .studio-work-line span[data-state="active"],
+.studio-production .studio-work-episode span[data-state="active"]{color:#fde68a}
+.studio-production .studio-work-line span[data-state="empty"],
+.studio-production .studio-work-episode span[data-state="empty"]{color:#9ca3af}
+.studio-production .studio-work-line small[data-state="error"],
+.studio-production .studio-work-episode small[data-state="error"]{color:#fca5a5}
+.studio-production .studio-work-line small[data-state="done"],
+.studio-production .studio-work-episode small[data-state="done"]{color:#86efac}
+.studio-production .studio-work-line small[data-state="active"],
+.studio-production .studio-work-episode small[data-state="active"]{color:#fde68a}
+.studio-production .studio-work-line small[data-state="empty"],
+.studio-production .studio-work-episode small[data-state="empty"]{color:#9ca3af}
+.studio-production .studio-work-series{margin:2px 0}
+.studio-production .studio-work-series > summary{list-style:none}
+.studio-production .studio-work-series > summary::-webkit-details-marker{display:none}
+.studio-production .studio-work-series > summary::before{content:'▸';display:inline-block;width:16px;color:#9ba29e}
+.studio-production .studio-work-series[open] > summary::before{content:'▾'}
+.studio-production .studio-work-short{margin:2px 0;border-radius:5px}
+.studio-production .studio-work-episodes{margin:0 0 7px 12px;border-left:1px solid rgba(255,255,255,.12);padding-left:8px}
+.studio-production .studio-work-episode{display:flex;flex-direction:column;gap:2px;width:100%;padding:6px 8px;text-align:left;background:transparent;border:0;border-radius:4px;color:inherit}
+.studio-production .studio-work-episode:hover{background:rgba(255,255,255,.06)}
+.studio-production .studio-work-episode small{font-size:11px}
+.studio-production.studio-admin-embedded .workspace-grid{display:block;border:0;max-width:none}
+.studio-production.studio-admin-embedded .left,.studio-production.studio-admin-embedded .right,.studio-production.studio-admin-embedded .studio-top{display:none}
+/* The admin console has no project sidebar, so retain its series selector. */
+.studio-production.studio-admin #episode-manager-modal aside{display:flex;margin-bottom:22px;max-height:280px}
+.studio-production .studio-story-sources{display:flex;gap:12px;margin:18px 0}
+.studio-production .studio-story-sources button,.studio-production #image-inspiration button{padding:10px 16px;border:1px solid #4e493a;background:#292820;color:#d8be83}
+.studio-production #image-inspiration{padding:14px;margin-bottom:14px;background:#151719;border:1px solid #343939;border-radius:10px}
+.studio-production #image-inspiration .image-box-heading{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}.studio-production #image-inspiration .image-box-heading h3{margin:0;font-size:14px}.studio-production #image-inspiration .image-box-heading span{font-size:11px;color:#7f8994}.studio-production #image-inspiration .image-box-actions{display:flex;align-items:center;gap:8px}.studio-production #image-inspiration .image-box-actions input{flex:1;font-size:12px}.studio-production #image-inspiration #inspiration-preview{max-width:180px;max-height:120px;object-fit:contain;margin:10px 0}.studio-production #image-inspiration #inspiration-direction{width:100%;margin-bottom:8px}
+.studio-production #image-inspiration p{color:#aeb7ad;margin-bottom:12px}
+.studio-production #inspiration-preview{max-width:100%;max-height:260px;object-fit:contain;margin:15px 0}
+.studio-production #inspiration-result{display:block;width:100%;background:#1d2023;padding:15px;color:inherit;margin:15px 0;border:1px solid #454b47;border-radius:8px}
+.studio-production #inspiration-direction{display:block;width:100%;background:#1d2023;color:inherit;border:1px solid #454b47;border-radius:8px;padding:12px;margin:12px 0}
+
+.studio-production .studio-top { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:18px; row-gap:10px; }
+.studio-production .studio-header-tools { display:flex; flex-wrap:wrap; gap:8px; width:auto; min-width:0; }
+.studio-production .studio-header-tools button { padding:7px 12px; border:1px solid #343939; border-radius:6px; color:inherit; background:transparent; }
+.studio-production .studio-header-tools button:hover { background:rgba(255,255,255,.06); }
+.studio-production .studio-header-tools button.icon-only-nav { width:42px; min-width:42px; padding:7px 0; text-align:center; font-size:18px; }
+
+/* Global tools above; production steps, work title and resume share one row. */
+.studio-production .studio-top > .studio-top-actions { grid-column:2; grid-row:1; width:auto; justify-content:flex-end; }
+.studio-production .studio-top > .studio-header-tools { grid-column:1; grid-row:1; }
+.studio-production .studio-production-bar {
+  grid-column:1 / -1;
+  grid-row:2;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 24px;
+  min-width:0;
+  padding-top:6px;
+  border-bottom:1px solid #323639;
+}
+.studio-production .studio-production-bar > .studio-stage-tabs {
+  flex:0 0 auto;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.studio-production .studio-work-context {
+  display:flex;
+  align-items:center;
+  flex:1 1 280px;
+  min-width:0;
+  max-width:100%;
+  gap:16px;
+  padding:4px 0;
+}
+.studio-production .studio-work-context > .studio-heading { flex:1; min-width:0; overflow:hidden; }
+.studio-production .studio-work-context .studio-current-title { display:block; flex:1; min-width:0; max-width:none; font-size:16px; line-height:1.5; text-align:right; white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
+.studio-production #studio-project-actions { flex:none; }
+.studio-production #studio-project-actions:empty { display:none; }
+.studio-production .studio-resume-control { margin:0; }
+.studio-production .studio-top #btn-continue { padding:7px 14px; border:0; background:#cfb27b; color:#282216; font-size:13px; white-space:nowrap; }
+.studio-production .studio-top #btn-continue:hover { background:#ddc18c; transform:none; box-shadow:none; }
+@media (max-width: 900px) {
+  .studio-production .studio-top { grid-template-columns: 1fr; row-gap: 8px; }
+  .studio-production .studio-top > .studio-header-tools,
+  .studio-production .studio-top > .studio-top-actions,
+  .studio-production .studio-top > .studio-production-bar { grid-column: 1; }
+  .studio-production .studio-top > .studio-top-actions { grid-row: 1; justify-content: flex-start; }
+  .studio-production .studio-top > .studio-header-tools { grid-row: 2; }
+  .studio-production .studio-top > .studio-production-bar { grid-row: 3; }
+}
+
+/* Story workspace: ordered sections and aligned production controls. */
+.studio-production #studio-story {padding:28px;max-width:1280px;margin:24px auto;}
+.studio-production #studio-story h2 {font-size:22px;letter-spacing:.02em;margin-bottom:8px;}
+.studio-production #studio-story .text-gray-500,
+.studio-production #studio-story .text-gray-600 {color:#a1aab5;}
+.studio-production #studio-story .field-label {display:block;margin-bottom:7px;color:#bac2cd;}
+.studio-production #studio-story select,
+.studio-production #studio-story input:not([type=checkbox]):not([type=file]),
+.studio-production #studio-story textarea {color-scheme:dark;background:#14181e;color:#edf1f7;border:1px solid #424b58;border-radius:9px;min-height:42px;max-width:100%;}
+.studio-production #studio-story select option {background:#14181e;color:#edf1f7;}
+.studio-production #studio-story #idea {min-height:180px;padding:18px;line-height:1.8;margin-top:12px;}
+.studio-production #studio-story .studio-story-sources {display:flex;gap:10px;margin:18px 0;flex-wrap:wrap;}
+.studio-production #studio-story .studio-story-sources.story-intake-inline {align-items:flex-start;}
+.studio-production #studio-story .studio-story-sources .story-reference-inline {margin:0; padding:10px 12px; display:flex; gap:8px; align-items:center; border:1px dashed #515a66; border-radius:10px; background:#191d23;}
+.studio-production #studio-story .studio-story-sources .story-reference-inline h3 {margin:0; white-space:nowrap;}
+.studio-production #studio-story .studio-story-sources .story-reference-inline > p,
+.studio-production #studio-story .studio-story-sources .story-reference-inline details {display:none;}
+.studio-production #studio-story .studio-story-sources .story-reference-inline input[type=file] {width:190px; font-size:12px;}
+.studio-production #studio-story .generation-reference-panel {padding:16px 18px;border:1px dashed #515a66;border-radius:12px;background:#191d23;margin:12px 0;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,320px);gap:8px 20px;align-items:center;}
+.studio-production #studio-story .generation-reference-panel h3 {font-size:14px;font-weight:600;}
+.studio-production #studio-story .generation-reference-panel small {font-size:12px;color:#a1aab5;margin-left:8px;font-weight:400;}
+.studio-production #studio-story .generation-reference-panel p {font-size:12px;line-height:1.6;color:#aeb7c4;margin:0;}
+.studio-production #studio-story .generation-reference-panel details {grid-column:1;font-size:12px;color:#aeb7c4;}
+.studio-production #studio-story .generation-reference-panel input[type=file] {grid-column:2;grid-row:1 / span 2;width:100%;font-size:12px;}
+.studio-production #studio-story input[type=file]::file-selector-button {background:#303a48;color:#f1f5f9;border:1px solid #566274;border-radius:7px;padding:9px 12px;margin-right:10px;cursor:pointer;}
+.studio-production #studio-story .story-draft-actions {flex-wrap:wrap;gap:12px;padding:12px 0;}
+.studio-production #studio-story .story-director {padding:22px;margin-top:20px;border:1px solid #39414b;background:#1b1f25;border-radius:14px;}
+.studio-production #studio-story .story-skills {background:#222832;border-color:#46505e;padding:16px;margin-bottom:20px;}
+.studio-production #studio-story #director-body > .grid {gap:16px;}
+.studio-production #studio-story #director-body > .grid > * {min-width:0;}
+.studio-production #studio-story #director-body > .grid select {width:100%;font-size:13px;}
+.studio-production #studio-story #director-body > .border-green-400\/30 {background:#1e2925;border-color:#3d5148;padding:12px 16px;}
+.studio-production #studio-story .story-output {margin-top:24px;padding:22px;border:1px solid #39414b;border-radius:14px;background:#1b1f25;}
+.studio-production #studio-story .story-output h3 {font-size:15px;font-weight:700;margin-bottom:18px;}
+.studio-production #studio-story .story-output-grid {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;}
+.studio-production #studio-story .story-output-field {min-width:0;display:flex;flex-direction:column;gap:7px;}
+.studio-production #studio-story .story-output-field select,
+.studio-production #studio-story .story-output-field input {width:100%;}
+.studio-production #studio-story .story-output-options {display:flex;flex-wrap:wrap;gap:16px 24px;padding:20px 0;}
+.studio-production #studio-story .story-submit-actions {display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;border-top:1px solid #39414b;padding-top:18px;}
+.studio-production #studio-story > .justify-between {flex-wrap:wrap;gap:10px;line-height:1.7;margin-top:16px;}
+@media(max-width:1100px){
+ .studio-production #studio-story .story-output-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .studio-production #studio-story #director-body > .grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:640px){
+ .studio-production #studio-story {padding:16px;margin:12px auto;}
+ .studio-production #studio-story .story-director,.studio-production #studio-story .story-output {padding:14px;}
+ .studio-production #studio-story .generation-reference-panel {display:block;}
+ .studio-production #studio-story .generation-reference-panel > * {margin-bottom:10px;}
+ .studio-production #studio-story .story-output-grid,
+ .studio-production #studio-story #director-body > .grid {grid-template-columns:minmax(0,1fr);}
+ .studio-production #studio-story #director-body > .grid > * {grid-column:auto;}
+ .studio-production #studio-story .story-submit-actions > button {flex:1 1 45%;}
+}
+
+/* Shared, quiet editing surface for story and media conversations. */
+.studio-production #image-inspiration [hidden]{display:none!important}
+.studio-production #image-inspiration{max-width:620px;border-radius:16px;padding:16px;background:#191c1e}
+.studio-production .image-dropzone{min-height:160px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;border:1px dashed #50544f;border-radius:12px;background:#141719;padding:14px}
+.studio-production #image-inspiration .image-dropzone img{width:100%;max-width:100%;max-height:220px;object-fit:contain;margin:0}
+.studio-production #image-inspiration .image-box-actions{justify-content:space-between;margin-top:12px;font-size:12px}
+.studio-production #image-inspiration details{font-size:12px;color:#959d99;margin-top:12px}
+.studio-production #image-inspiration p:empty{display:none}
+.studio-production #image-inspiration p{font-size:12px;margin:10px 0 0}
+.studio-production #image-inspiration button{border-radius:8px;padding:8px 13px}
+.studio-production #script-preview-modal>div{background:#191c1e!important;border:1px solid #3a403e;border-radius:18px}
+.studio-production .ai-edit-conversation{background:#141719;border:1px solid #343c39;border-radius:12px;padding:14px}
+.studio-production .ai-edit-conversation textarea{font-size:13px;min-width:0;border-radius:10px}
+.studio-production #script-preview-modal .script-chat-messages{max-height:200px}
+.studio-production #script-preview-modal .script-chat-messages:empty{display:none}
+@media(max-width:600px){.studio-production #image-inspiration{max-width:100%}.studio-production #script-preview-modal>div{padding:14px}}
+
+/* Story intake: compact image rail alongside the primary writing surface. */
+.studio-production #studio-story .studio-story-sources{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.studio-production #studio-story .studio-story-sources button{font-size:12px;padding:8px 12px;border-radius:8px;background:transparent;border-color:#3b413e;color:#b9c0b9}
+.studio-production #studio-story .story-intake-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:20px;align-items:start}
+.studio-production #studio-story #image-inspiration{width:100%;max-width:none;min-width:0;margin:0;padding:0;border:0;background:transparent;border-radius:0}
+.studio-production #studio-story .image-dropzone{position:relative;display:flex;min-height:240px;height:240px;padding:0;overflow:hidden;border-radius:12px;background:#141719}
+.studio-production #studio-story #inspiration-preview{display:block;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:contain}
+.studio-production #studio-story .image-dropzone:has(img:not([hidden])) #inspiration-import{position:absolute;bottom:10px;left:10px}
+.studio-production #studio-story #inspiration-remove{position:absolute;bottom:10px;right:10px}
+.studio-production #studio-story .image-dropzone button{font-size:12px;padding:6px 10px;background:#202522ed;border-color:#52564b}
+.studio-production #studio-story .image-box-actions{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.studio-production #studio-story .image-box-actions label{font-size:12px;white-space:nowrap;color:#aeb6ae}
+.studio-production #studio-story #inspiration-analyze{font-size:12px;padding:7px 11px}
+.studio-production #studio-story .story-writing-pane{min-width:0;display:flex;flex-direction:column;gap:10px}
+.studio-production #studio-story .story-writing-pane>label{font-size:12px;color:#aeb6ae;line-height:20px}
+.studio-production #studio-story .story-writing-pane #idea{width:100%;height:300px;min-height:300px;margin:0;padding:16px;font-size:14px;line-height:1.85;border:1px solid #3b4340;border-radius:12px;background:#15181a}
+.studio-production #studio-story .story-draft-actions{flex-wrap:wrap;gap:10px;margin-top:16px;padding-top:12px;border-top:1px solid #303632}
+.studio-production #studio-story .story-intake-layout:has(#image-inspiration[hidden]){grid-template-columns:minmax(0,1fr)}
+@media(max-width:760px){
+.studio-production #studio-story .story-intake-layout{grid-template-columns:minmax(0,1fr);gap:18px}
+.studio-production #studio-story .image-dropzone{height:200px;min-height:200px}
+.studio-production #studio-story .story-writing-pane #idea{height:280px;min-height:220px}
+}
+
+/* Image controls overlay the preview without reserving space. */
+.studio-production #studio-story .story-image-frame{position:relative;margin-top:30px;height:300px}
+.studio-production #studio-story .story-image-frame .image-dropzone{height:100%;min-height:0}
+.studio-production #studio-story .story-image-frame{isolation:isolate}
+.studio-production #studio-story .story-image-frame .image-box-actions{position:absolute;bottom:0;left:0;right:0;margin:0;padding:12px 10px;background:linear-gradient(transparent,#111a17f2);border-radius:0 0 12px 12px;z-index:2}
+.studio-production #studio-story .story-image-frame details{position:absolute;top:48px;left:10px;right:10px;margin:0;z-index:3;border-radius:8px;background:#171e1cf2;padding:8px;font-size:11px}
+.studio-production #studio-story .story-image-frame #inspiration-direction{font-size:12px;max-height:130px}
+.studio-production #studio-story .story-image-frame .image-dropzone:has(img:not([hidden])) #inspiration-import{top:10px;bottom:auto}
+.studio-production #studio-story .story-image-frame #inspiration-remove{top:10px;bottom:auto}
+@media(hover:hover) and (pointer:fine){
+.studio-production #studio-story .story-image-frame:has(img:not([hidden])) .image-dropzone button,
+.studio-production #studio-story .story-image-frame .image-box-actions,
+.studio-production #studio-story .story-image-frame details{opacity:0;pointer-events:none;transition:opacity .16s ease}
+.studio-production #studio-story .story-image-frame:has(img:not([hidden])):is(:hover,:focus-within) .image-dropzone button,
+.studio-production #studio-story .story-image-frame:is(:hover,:focus-within) .image-box-actions,
+.studio-production #studio-story .story-image-frame:is(:hover,:focus-within) details{opacity:1;pointer-events:auto}
+}
+@media(max-width:760px){.studio-production #studio-story .story-image-frame{margin-top:0;height:260px}}
+
+/* Peer steps: story input, direction, and generation settings. */
+.studio-production #studio-story{background:transparent;border:0;box-shadow:none;padding:0}
+.studio-production #studio-story .story-step-card{padding:22px;margin:0 0 18px;border:1px solid #343c39;border-radius:16px;background:#1c2022}
+.studio-production #studio-story .story-step-heading{display:flex;align-items:center;gap:12px;min-height:30px;margin:0}
+.studio-production #studio-story .story-step-heading h2,
+.studio-production #studio-story .story-step-heading h3,
+.studio-production #studio-story .story-step-title{font-size:18px;font-weight:700;line-height:1.5;margin:0;color:#edf0eb}
+.studio-production #studio-story .story-step-heading>button{margin-left:auto;flex-shrink:0;padding:6px 10px;border-radius:7px;background:transparent;border:0;color:#aeb6ae;font-size:12px;cursor:pointer}
+.studio-production #studio-story .story-step-heading>button:hover{color:#dec78e;background:#ffffff08}
+.studio-production #studio-story .story-step-heading>button:focus-visible{outline:2px solid #cdb278;outline-offset:2px}
+.studio-production #studio-story .story-step-heading+div:not([hidden]):not(.hidden){margin-top:18px}
+.studio-production #studio-story #story-input-body[hidden],
+.studio-production #studio-story #story-output-body[hidden]{display:none!important}
+@media(max-width:640px){.studio-production #studio-story .story-step-card{padding:16px}.studio-production #studio-story .story-step-heading{flex-wrap:wrap}.studio-production #studio-story #director-match-status{font-size:11px}}
+
+/* Asset stage owns generation and material cards; story review stays in step one. */
+.studio-production main[data-stage="1"] #script-summary,
+.studio-production main[data-stage="1"] #script-review-bar{display:none!important}
+.studio-production #studio-asset-controls{background:transparent;border:0;box-shadow:none;padding:0;margin:0 0 16px}
+.studio-production #studio-asset-controls>button{border-radius:10px}
+
+/* Keep project navigation stationary; only the works collection scrolls. */
+@media(min-width:621px){
+.studio-production .workspace-sidebar.left:has(.studio-all-works){position:sticky;top:0;align-self:start;display:flex;flex-direction:column;height:100vh;height:100dvh;max-height:100dvh;min-height:0;overflow:hidden;padding-bottom:0}
+.studio-production .workspace-sidebar.left:has(.studio-all-works) .studio-brand{flex-shrink:0}
+.studio-production .workspace-sidebar.left:has(.studio-all-works) .studio-navigation{display:flex;flex-direction:column;flex:1;min-height:0;max-height:none;overflow:hidden}
+.studio-production .workspace-sidebar.left .studio-navigation:has(.studio-all-works)>:not(.studio-all-works){flex-shrink:0}
+.studio-production .workspace-sidebar.left .studio-all-works{flex:1;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-bottom:16px}
+}
+
+/* Collection → series → episode → historical version. */
+.studio-production .studio-work-group + .studio-work-group{margin-top:18px;padding-top:12px;border-top:1px solid #353b38}
+.studio-production .studio-work-group-title{display:flex;align-items:center;gap:6px;padding:6px 8px;margin:0 0 6px;font-size:11px;color:#929d96;position:relative;white-space:nowrap;min-width:0}
+.studio-production .studio-work-group-title>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.studio-production .studio-group-add{margin-left:auto;width:22px;height:22px;padding:0;border:1px solid #59645b;border-radius:5px;background:#252d28;color:#d8c58e;font-size:16px;line-height:1;opacity:0;pointer-events:none;transition:opacity .14s ease}
+.studio-production .studio-work-group-title:is(:hover,:focus-within) .studio-group-add{opacity:1;pointer-events:auto}
+.studio-production .studio-work-series>.studio-work-line{font-weight:600;font-size:13px}
+.studio-production .studio-work-episodes{margin:2px 0 8px 17px;padding-left:9px;border-left:1px solid #3a433e}
+.studio-production .studio-all-works .studio-work-episode{padding:8px;min-width:0;margin:2px 0;font-size:12px}
+.studio-production .studio-work-episode span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.studio-production .studio-work-versions{margin:0 0 8px 9px;padding-left:9px;border-left:1px solid #323b36}
+.studio-production .studio-work-versions>summary{padding:5px 0;cursor:pointer;font-size:11px;color:#939f97}
+.studio-production .studio-all-works .studio-work-version{display:block;padding:6px 8px;font-size:11px;color:#9da8a1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.studio-production .studio-all-works [aria-current="page"]{background:#2c332e;box-shadow:inset 2px 0 #cfb27b;border-radius:6px}
+.studio-production .studio-work-group>.studio-work-line{font-size:13px;margin:2px 0}
+.studio-production .works-manager-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.studio-production .works-manager-toolbar input{flex:1;min-width:160px}
+.studio-production .works-manager-toolbar input,.studio-production .works-manager-toolbar select{background:#15191b;border:1px solid #3b443e;border-radius:9px;padding:10px;color:inherit}
+.studio-production .works-manager-list{display:grid;gap:12px;margin-top:16px}
+.studio-production .works-manager-card{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:18px;border:1px solid #363f39;border-radius:12px;background:#1c2122}
+.studio-production .works-manager-select{width:18px;height:18px;accent-color:#f5c66b;cursor:pointer;flex:0 0 auto}
+.studio-production .works-manager-batch{display:flex;align-items:center;gap:10px;margin:10px 0;color:#b8c0b9;font-size:12px}
+.studio-production .works-manager-batch button:disabled{opacity:.45;cursor:not-allowed}
+.studio-production .works-manager-info{flex:1;min-width:180px;overflow-wrap:anywhere}
+.studio-production .works-manager-info h3{font-size:15px;margin:0 0 7px}
+.studio-production .works-manager-info p{font-size:12px;color:#99a59d;margin:0}
+.studio-production .works-manager-actions{display:flex;gap:8px}
+.studio-production .works-manager-card button,.studio-production .works-manager-toolbar button{padding:7px 12px;border:1px solid #424b43;background:#252b27;color:#d6c79b}
+.studio-production .works-manager-actions button:last-child{color:#d69b99}
+.studio-production .works-manager-card details{width:100%;border-top:1px solid #333c36;padding-top:12px;font-size:12px;color:#adb8af}
+.studio-production .works-manager-card summary{cursor:pointer}
+.studio-production .works-manager-episode{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;margin-top:6px;background:#171c19;border-radius:7px}
+.studio-production .works-manager-episode-batch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;background:#131816;border-radius:8px}
+.studio-production .works-manager-episode-batch button{margin:0;padding:6px 9px;font-size:11px}
+.studio-production .works-manager-episode-count{margin-right:auto;color:#adb8af;font-size:11px}
+.studio-production .works-manager-episode-select{width:16px;height:16px;accent-color:#f5c66b;flex:0 0 auto}
+.studio-production .works-manager-episode-info{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.studio-production .works-manager-episode-info span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.studio-production .works-manager-episode-state{font-size:11px;color:#9ca8a0;white-space:nowrap}
+.studio-production .works-manager-episode-state.is-done{color:#7bd89c}
+.studio-production .works-manager-episode-state.is-error{color:#e39a95}
+.studio-production .works-manager-episode-preview{width:150px;height:84px;flex:0 0 150px;object-fit:cover;background:#0d1110;border:1px solid #3b5548;border-radius:7px}
+.studio-production .works-manager-episode-download{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border:1px solid #315568;border-radius:7px;color:#8fd3f4;background:#172329;text-decoration:none;white-space:nowrap;font-size:12px}
+.studio-production .works-manager-episode-download:hover{background:#203542;color:#b9e9ff}
+@media (max-width:620px){.studio-production .works-manager-episode-preview{width:118px;height:68px;flex-basis:118px}}
+@media (max-width:620px){.studio-production .works-manager-card{padding:14px;gap:10px}.studio-production .works-manager-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}.studio-production .works-manager-episode{align-items:flex-start;flex-wrap:wrap}.studio-production .works-manager-episode-info{min-width:calc(100% - 30px)}}
+
+/* Only the active episode is highlighted, not its parent series. */
+.studio-production .studio-all-works .studio-work-series>summary[aria-current="page"]{background:transparent;box-shadow:none}
+.studio-production .studio-all-works .studio-work-series>summary[aria-current="page"]:hover{background:rgba(255,255,255,.06)}
+
+/* Inline rename actions appear on hover or keyboard focus. */
+.studio-production .studio-work-editable{position:relative;min-width:0}
+.studio-production .studio-work-line{position:relative;padding-right:32px}
+.studio-production .studio-work-line:has(.studio-work-add-episode){padding-right:64px}
+.studio-production .studio-work-line-actions{position:absolute;right:3px;top:50%;transform:translateY(-50%);display:grid;grid-template-columns:26px 26px;align-items:center;gap:3px;width:55px;height:28px;opacity:0;pointer-events:none;transition:opacity .14s ease}
+.studio-production .studio-work-line:is(:hover,:focus-within) .studio-work-line-actions{opacity:1;pointer-events:auto}
+.studio-production .studio-work-add-episode{position:static;transform:none;display:flex!important;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:1px solid #59645b;border-radius:6px;background:#252d28;color:#d8c58e;font-size:18px;line-height:1;opacity:1!important;pointer-events:auto!important}
+.studio-production .studio-work-series>.studio-work-line{min-height:34px}
+.studio-production .studio-all-works .studio-work-editable>.studio-work-episode{padding-right:30px}
+.studio-production .studio-all-works button.studio-work-rename{position:absolute!important;right:3px;top:50%;transform:translateY(-50%);display:flex!important;visibility:visible!important;align-items:center;justify-content:center;width:26px;height:26px;margin:0;padding:5px;border:1px solid #59645b;border-radius:6px;background:#252d28;color:#e6d39f;opacity:0!important;pointer-events:none!important;z-index:3;transition:opacity .14s ease}
+.studio-production .studio-work-line-actions .studio-work-rename{position:static!important;right:auto!important;top:auto!important;transform:none!important;margin:0!important;flex:0 0 26px;opacity:1!important;pointer-events:auto!important}
+.studio-production .studio-work-line-actions>*{position:static!important;grid-column:auto;grid-row:1;width:26px!important;min-width:26px!important;max-width:26px!important;box-sizing:border-box}
+.studio-production .studio-work-line-actions>.studio-work-add-episode{grid-column:1}
+.studio-production .studio-work-line-actions>.studio-work-rename{grid-column:2}
+.studio-production .studio-work-line:is(:hover,:focus-within) .studio-work-line-actions .studio-work-rename{opacity:1!important;pointer-events:auto!important}
+.studio-production .studio-work-line:is(:hover,:focus-within)>.studio-work-rename,
+.studio-production .studio-work-editable:is(:hover,:focus-within)>.studio-work-rename{opacity:1!important;pointer-events:auto!important}
+.studio-production .studio-work-line:is(:hover,:focus-within)>.studio-work-rename,
+.studio-production .studio-work-editable:is(:hover,:focus-within)>.studio-work-rename{opacity:1;pointer-events:auto}
+.studio-production .studio-all-works button.studio-work-rename:hover{background:#3b4236;color:#ead099}
+@media(hover:none){.studio-production .studio-all-works button.studio-work-rename{opacity:1;pointer-events:auto}}
+.image-dropzone.is-dragover,.img-slot.is-dragover{outline:2px solid rgba(250,204,21,.8);background:rgba(250,204,21,.08)}

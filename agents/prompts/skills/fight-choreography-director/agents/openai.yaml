@@ -1,0 +1,6 @@
+interface:
+  display_name: "全域打斗导演"
+  short_description: "设计任意题材的连续攻防、武器动作与电影级打斗视频提示词"
+  default_prompt: "使用 $fight-choreography-director 设计一段15秒修仙双剑雪山决战，先给攻防方案。"
+policy:
+  allow_implicit_invocation: true

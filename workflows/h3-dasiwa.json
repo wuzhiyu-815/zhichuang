@@ -1,0 +1,277 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "DasiwaMinimaxH3_dasiwaREF2VAHybridV1.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "2": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "3": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "4": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "6": {
+    "inputs": {
+      "prompt": "【参考素材说明】@图片1：人物参考，锁定脸、发型、服装和身份；@图片2：场景参考，锁定空间、光线和构图；@图片3：道具/风格参考，锁定材质、色彩和视觉语言。\n\n【核心创意】10秒，16:9横版。主体在统一场景中完成一个连续、清晰、可读的动作推进，整体强调智能参考的一致性、镜头稳定的因果推进和自然的声音反馈。\n\n【画面过程描述】\n0-3秒｜Shot 1｜中远景：先建立人物与场景关系，严格沿用@图片1与@图片2的身份、服装、空间和光线，镜头缓慢推进，动作轻微启动。\n3-6秒｜Shot 2｜中景：主体开始执行第一个关键动作，保留前一镜的人物特征与场景方向，不新增无关元素，运镜跟随动作。\n6-8秒｜Shot 3｜近景：切到细节或情绪强化段，突出@图片3中的道具/材质/风格特征，动作连续不中断。\n8-10秒｜Shot 4｜收束镜头：完成动作并落到清晰的结束状态，保持人物身份、环境关系和视觉风格一致，声音自然收尾。\n\n【整体要求补充】\n保持人物脸、发型、服装、道具、场景结构和主光方向一致；如果出现文字、logo、标题或按钮文案，必须按准确拼写呈现；音画同步自然；优先连续镜头逻辑，不要突然切到无关场景。\n\n【避免】\n不要新增角色，不要改掉主角身份，不要把参考图里的关键特征混掉，不要突然变成另一种风格，不要出现错拼文字或无关字幕。非叙事性音乐：N/A",
+      "width": 1344,
+      "height": 768,
+      "length": 243,
+      "ref_image_size": "match",
+      "clip": [
+        "2",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ],
+      "audio_vae": [
+        "4",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "20",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "21",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Reference to Video"
+    }
+  },
+  "7": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": 4,
+      "denoise": 1,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "8": {
+    "inputs": {
+      "noise_seed": 20260827
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "9": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "10": {
+    "inputs": {
+      "model": [
+        "24",
+        0
+      ],
+      "conditioning": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "11": {
+    "inputs": {
+      "noise": [
+        "8",
+        0
+      ],
+      "guider": [
+        "10",
+        0
+      ],
+      "sampler": [
+        "9",
+        0
+      ],
+      "sigmas": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "6",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "12": {
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "13": {
+    "inputs": {
+      "samples": [
+        "11",
+        0
+      ],
+      "vae": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "14": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "images": [
+        "12",
+        0
+      ],
+      "audio": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "创建视频"
+    }
+  },
+  "15": {
+    "inputs": {
+      "filename_prefix": "video/h3_smartref_4step_fast",
+      "format": "mp4",
+      "format.codec": "auto",
+      "codec": "h264",
+      "codec.encoding": "re-encode",
+      "codec.encoding.crf": 15,
+      "video": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "保存视频"
+    }
+  },
+  "20": {
+    "inputs": {
+      "image": "ref_character.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "21": {
+    "inputs": {
+      "image": "ref_background.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "22": {
+    "inputs": {
+      "image": "ref_prop.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "23": {
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+    "_meta": {
+      "title": "MiniMax H3 Mem Eff Sage Attention Patch"
+    }
+  },
+  "24": {
+    "inputs": {
+      "lora_name": "minimax_h3\\minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors",
+      "strength_model": 0.75,
+      "model": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  }
+}

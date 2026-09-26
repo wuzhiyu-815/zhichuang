@@ -1,0 +1,13 @@
+{
+  "source_name": "【MINIMAX-H3】八月最强打斗武戏.json",
+  "source_sha256": "b44463f8dcafff5b797c0b596d467c5827dc21e34dc384c96f6ed42c9b621041",
+  "profile": "august-15s-zh-v1",
+  "sanitized": [
+    "old example prompt removed",
+    "old reference filename removed",
+    "generic output prefix"
+  ],
+  "unchanged": "all model,LoRA,sampler,sigma,memory,frame-expression and decode connections",
+  "case": "docs/07-H3快节奏打戏复用.md",
+  "validation": "source workflow generated actual15.083333s video; user reported positive visual result. Generalized runner requires offline tests; not automatically full audiovisual acceptance."
+}

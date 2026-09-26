@@ -1,0 +1,72 @@
+{
+  "1": {
+    "inputs": {
+      "model_name": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "keep_model_loaded": true,
+      "use_flash_attn": true
+    },
+    "class_type": "Qwen3TTSModelLoader",
+    "_meta": {
+      "title": "Qwen3 TTS Model Loader"
+    }
+  },
+  "2": {
+    "inputs": {
+      "text": "你好，今天我们一起把事情说清楚。"
+    },
+    "class_type": "CR Text",
+    "_meta": {
+      "title": "CR Text（台词）"
+    }
+  },
+  "3": {
+    "inputs": {
+      "text": "Natural clear Mandarin adult voice."
+    },
+    "class_type": "CR Text",
+    "_meta": {
+      "title": "CR Text（音色描述）"
+    }
+  },
+  "4": {
+    "inputs": {
+      "text": [
+        "2",
+        0
+      ],
+      "voice_description": [
+        "3",
+        0
+      ],
+      "language": "Auto",
+      "seed": 1,
+      "max_new_tokens": 2048,
+      "temperature": 1,
+      "top_p": 0.8,
+      "repetition_penalty": 1.1,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "Qwen3TTSVoiceDesign",
+    "_meta": {
+      "title": "Qwen3 TTS Voice Design"
+    }
+  },
+  "5": {
+    "inputs": {
+      "filename_prefix": "autopilot/voice",
+      "audio": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "SaveAudio",
+    "_meta": {
+      "title": "保存音频"
+    }
+  }
+}

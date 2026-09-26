@@ -1,0 +1,280 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "skill": "minimax-h3-action-director",
+    "evaluation_date": "2026-08-14",
+    "test_count": 5,
+    "purpose": "Smoke tests to verify skill core functionality"
+  },
+
+  "tests": [
+    {
+      "id": "eval_001",
+      "name": "Sofia Coppola + BJJ One-on-One (Slow Contemplative)",
+      "category": "director_martial_art_integration",
+      "difficulty": "medium",
+      "input": {
+        "action_type": "brazilian_jitsu",
+        "duration": 8,
+        "director_style": "Sofia Coppola",
+        "scene_type": "one_on_one_duel",
+        "environment": "gymnasium",
+        "camera_mood": "intimate_contemplative",
+        "special_requirements": "breathing emphasis, long holds, slow-motion on impact"
+      },
+      "expected_outputs": [
+        "Must include timing chart with 0.1s precision",
+        "Average shot duration 2-3s minimum (Coppola's pacing)",
+        "Impact holds 0.4-0.5s (extended, not standard 0.2s)",
+        "Pastel-tinted desaturation mentioned in color treatment",
+        "Shallow depth-of-field with soft focus background",
+        "Breathing audible and synchronized",
+        "BJJ leverage emphasis (not punching/kicking)",
+        "Prompt under 2000 tokens",
+        "Timing chart sums to exactly 8 seconds",
+        "Certification checklist confirms all requirements"
+      ],
+      "validation_rules": [
+        "Director-martial art matrix lookup successful (Coppola + BJJ marked as 'natural pairing')",
+        "High-speed compensation strategy: slow push-in or static hold selected",
+        "Static shots forbid drift explicitly",
+        "All actions describe observable behavior (muscle strain, breathing pattern, grip pressure visible)",
+        "No rapid cutting (0.3-0.5s cuts inappropriate for Coppola)",
+        "Color palette (pastel desaturated) evident throughout"
+      ]
+    },
+
+    {
+      "id": "eval_002",
+      "name": "Kathryn Bigelow + HK Kung Fu Multi-Opponent (Handheld Rapid)",
+      "category": "director_martial_art_integration",
+      "difficulty": "hard",
+      "input": {
+        "action_type": "hongkong_kung_fu",
+        "duration": 12,
+        "director_style": "Kathryn Bigelow",
+        "scene_type": "multi_opponent",
+        "environment": "warehouse",
+        "camera_mood": "handheld_tension_documentary",
+        "special_requirements": "rapid cutting, close-ups on faces, opponent variety"
+      },
+      "expected_outputs": [
+        "Must include timing chart with multiple opponent phases",
+        "Shot duration 0.4-1.0s (Bigelow's tight cutting)",
+        "Handheld camera with micro-wobble (2-4 Hz) throughout",
+        "Close-ups on hero's face showing focus/determination",
+        "Rapid opponent entrances (0.4-0.6s per opponent)",
+        "High-contrast desaturated environment (focus on faces)",
+        "Impact sounds layered and distinct (different frequencies per opponent)",
+        "Prompt under 2000 tokens despite 12s duration",
+        "Timing chart sums to exactly 12 seconds",
+        "4-5 opponents clearly distinguished in choreography"
+      ],
+      "validation_rules": [
+        "Director-martial art pairing optimal (Bigelow + HK confirmed)",
+        "High-speed compensation: rapid cutting (Bigelow rule) applied",
+        "Handheld micro-wobble (not smooth tracking) throughout",
+        "Average shot duration 0.5-0.8s (Bigelow fast-paced)",
+        "Impact holds 0.15-0.2s (quick confirmation, not contemplative)",
+        "All cuts timestamped to 0.1s precision",
+        "Hero's position clear (not lost in handheld chaos)",
+        "Each opponent impact has distinct frequency tag"
+      ]
+    },
+
+    {
+      "id": "eval_003",
+      "name": "Park Chan-wook + Sword Fighting (Baroque Saturated)",
+      "category": "director_martial_art_integration",
+      "difficulty": "hard",
+      "input": {
+        "action_type": "sword_fighting",
+        "duration": 15,
+        "director_style": "Park Chan-wook",
+        "scene_type": "weapon_duel",
+        "environment": "temple_garden_rain",
+        "camera_mood": "baroque_geometric_saturated",
+        "special_requirements": "red accent colors, slow-motion on rotation, metallic reflections"
+      },
+      "expected_outputs": [
+        "Must include full 15-second timing chart with blade-by-blade detail",
+        "Saturated colors (85%+ saturation) evident in description",
+        "Red accent colors on blade contact/blood moments",
+        "Slow lateral camera tracking (baroque motion) emphasized",
+        "Shot duration 2-3s minimum (Park's composed style)",
+        "Slow-motion on rotational strikes (0.6x speed)",
+        "Metallic reflections key to visual interest",
+        "Geometric framing (thirds, diagonals) documented",
+        "Prompt under 2000 tokens despite complexity",
+        "Timing chart sums to exactly 15 seconds"
+      ],
+      "validation_rules": [
+        "Director-martial art pairing strong (Park + sword confirmed optimal)",
+        "High-speed compensation: slow push-in during engagement + arc tracking",
+        "Slow lateral tracking (40-60% of blade speed) evident in camera strategy",
+        "Color saturation tags (85%+) for all martial artist/weapon descriptions",
+        "Slow-motion timing clear (0.6x speed, X-second holds)",
+        "Geometric framing language used (diagonals, thirds, z-axis depth)",
+        "Blade geometry emphasized (extension lines, point-to-point clarity)",
+        "Rain/mist for light reflection enhancement documented"
+      ]
+    },
+
+    {
+      "id": "eval_004",
+      "name": "Template Mode: One-on-One Duel (Adaptation Test)",
+      "category": "template_adaptation",
+      "difficulty": "medium",
+      "input": {
+        "template": "one_on_one_duel",
+        "duration": 10,
+        "director_style": "Denis Villeneuve",
+        "environment": "rooftop_urban",
+        "special_adaptations": "wide landscape context, minimal close-ups, patient pacing"
+      },
+      "expected_outputs": [
+        "Must use one-on-one-duel template (approach, exchange, impact, reset, escalation, climax)",
+        "Adapt template to Denis Villeneuve style (wider shots, landscape context)",
+        "Timing chart modified from standard (longer landscape holds)",
+        "Average shot duration 2-3s (Villeneuve patient)",
+        "Very wide establishing shots (15m+) showing rooftop environment",
+        "Slow push-in during engagement (standard Villeneuve)",
+        "Deep depth-of-field showing multiple environment layers",
+        "Minimal close-ups (only impact moments)",
+        "Prompt under 2000 tokens",
+        "Timing chart sums to exactly 10 seconds"
+      ],
+      "validation_rules": [
+        "Template lookup successful (one_on_one_duel template loaded)",
+        "Director adaptation clear (Villeneuve's style applied to template beats)",
+        "Wide establishing shots 2-3s each (vs typical template 1.5s)",
+        "Landscape prominence evident (rooftop, sky, urban context visible)",
+        "Geometric positioning emphasized (distance, sight lines)",
+        "Patient pacing (no rapid cuts, no handheld urgency)",
+        "Deep depth-of-field consistently applied",
+        "Climax beat outside final 10% (confirmed in timing)"
+      ]
+    },
+
+    {
+      "id": "eval_005",
+      "name": "Director Study Mode: Greta Gerwig + Environmental Combat",
+      "category": "director_study",
+      "difficulty": "medium",
+      "input": {
+        "query_type": "director_study",
+        "director": "Greta Gerwig",
+        "martial_art": "hongkong_kung_fu",
+        "scene_type": "environmental_use",
+        "duration": 10,
+        "question": "How would Greta Gerwig shoot a 10-second environmental combat scene with HK kung fu choreography?"
+      },
+      "expected_outputs": [
+        "Must include full director study analysis",
+        "Explain Gerwig's approach to action (choreography, musical rhythm, playful energy)",
+        "Show HK kung fu adaptations for Gerwig (slower cuts, grace emphasis, whimsy despite danger)",
+        "Provide reference prompt ready to use",
+        "Color palette (saturated, playful) documented",
+        "Musical integration (cuts on beat, rhythm synchronized)",
+        "Slow-motion on environmental strikes (0.6x speed)",
+        "Playful tone evident despite high-impact choreography",
+        "Timing chart provided for reference",
+        "Prompt under 2000 tokens"
+      ],
+      "validation_rules": [
+        "Director-martial art matrix consulted (Gerwig + HK identified)",
+        "Gerwig's style characteristics documented (whimsy, choreography, music)",
+        "HK kung fu pacing adapted (slower than standard, grace-focused)",
+        "Color saturation tags (playful palette)",
+        "Musical rhythm integration documented",
+        "Slow-motion strategy clear (0.6x on arcs)",
+        "Choreography emphasized as 'dance-like' (Gerwig characteristic)",
+        "Environmental objects treated as props/partners not weapons",
+        "Analysis readable and educational (learning outcome achieved)"
+      ]
+    }
+  ],
+
+  "smoke_test_checklist": {
+    "core_functionality": [
+      "Skill accepts action_type, duration, director_style, scene_type inputs ✓",
+      "Skill outputs timing chart (0.1s precision) ✓",
+      "Skill outputs MiniMax H3 prompt (Task type + Shots + descriptions) ✓",
+      "Skill applies director style to pacing (not just color grading) ✓",
+      "Skill applies martial art pacing (BJJ ≠ HK in timing) ✓",
+      "Skill integrates high-speed compensation strategy ✓",
+      "Skill forbids drift in static shots (explicitly stated) ✓",
+      "Skill converts actions to observable behavior ✓",
+      "Skill certifies timing adds up ✓",
+      "Skill keeps prompts under 2000 tokens ✓"
+    ],
+    "reference_integration": [
+      "Director integration matrix consulted correctly ✓",
+      "Martial arts database characteristics applied ✓",
+      "High-speed cinematography rules applied (push-in/hold/arc/cut/handheld) ✓",
+      "Camera technique vocabulary used accurately ✓",
+      "Audio design layers integrated ✓",
+      "Action scene templates adapted (if template mode) ✓",
+      "Certification checklist items verified ✓"
+    ],
+    "mode_specific": [
+      "Quick Mode: Single prompt output in <2 minutes ✓",
+      "Detailed Mode: Timing chart + analysis in 5-10 minutes ✓",
+      "Template Mode: Template loaded + adapted + prompt ✓",
+      "Director Study Mode: Full analysis + educational ✓"
+    ],
+    "error_prevention": [
+      "Timing chart sums to target duration (no overage) ✓",
+      "Climax beat outside final 10% of clip ✓",
+      "No emotion language (only observable behavior) ✓",
+      "Director style evident throughout (not just mentioned) ✓",
+      "Martial art authenticity (not generic movement) ✓",
+      "Camera motion realistic (not technically impossible) ✓",
+      "Audio design supports visual (not contradictory) ✓",
+      "Prompt ready to paste into MiniMax H3 (correct syntax) ✓"
+    ]
+  },
+
+  "expected_performance": {
+    "response_time": {
+      "quick_mode": "under 2 minutes",
+      "detailed_mode": "5-10 minutes",
+      "template_mode": "3 minutes",
+      "director_study": "5 minutes"
+    },
+    "prompt_quality": {
+      "under_2000_tokens": "100% of outputs",
+      "timing_accurate": "100% (sums to exact duration)",
+      "director_evident": "100% of outputs",
+      "martial_art_authentic": "90%+ (some styles may extrapolate)",
+      "high_speed_strategy_applied": "100% of action scenes",
+      "certification_passed": "100% of outputs"
+    },
+    "user_satisfaction": {
+      "timing_chart_useful": "90%+ (validates choreography before generation)",
+      "prompt_ready_to_use": "95%+ (minor tweaks at most)",
+      "director_style_recognized": "85%+ (feedback valuable for iteration)",
+      "martial_art_authenticity": "80%+ (depends on skill's martial arts knowledge)"
+    }
+  },
+
+  "known_limitations": [
+    "Skill works best with 8-12s durations (5-15s range supported, but middle is optimal)",
+    "Director-martial art matrix covers 14 directors × 7 martial arts = 98 combinations (some may require extrapolation)",
+    "Prompts assume MiniMax H3 syntax (may need adaptation for other models)",
+    "High-speed compensation strategies most effective for martial arts, less so for other action",
+    "Audio design templates assume diegetic/impact-focused sounds (music-heavy scenes may need revision)",
+    "Template adaptation works best when template + director + martial art fit the matrix"
+  ],
+
+  "future_enhancements": [
+    "Add weapon-specific templates (gun action, knife combat)",
+    "Expand director database (10+ more contemporary directors)",
+    "Add stunt-coordination emphasis mode (for integration with stunt teams)",
+    "Multi-language reference materials (French, Chinese, Korean, Japanese)",
+    "Video example links (reference actual films for each director-martial art combo)",
+    "Integration with MiniMax H3 API (direct generation from prompt)",
+    "Batch mode (generate multiple 10s scenes for longer sequences)",
+    "Audio design detail library (library of punch/kick/block sounds by martial art)"
+  ]
+}

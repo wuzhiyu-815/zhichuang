@@ -1,0 +1,320 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "skill": "minimax-h3-action-director",
+    "created": "2026-08-14",
+    "purpose": "Quick lookup reference for action director workflow"
+  },
+
+  "martial_arts_quick_ref": {
+    "hongkong_kung_fu": {
+      "aliases": ["HK", "kung fu", "chinese martial arts"],
+      "pacing": "fast",
+      "avg_shot_duration": "0.3-0.8s",
+      "key_techniques": "shuai jiao footwork, hand-speed strikes, environmental use, prop integration",
+      "camera_priority": "quick cuts, close-ups on contact, follow-cam on combos",
+      "audio_priority": "impacts distinct, speed emphasis, environmental sounds",
+      "best_directors": ["Kathryn Bigelow", "Greta Gerwig", "Jackie Chan footage"]
+    },
+    "brazilian_jitsu": {
+      "aliases": ["BJJ", "grappling", "jiu-jitsu"],
+      "pacing": "slow",
+      "avg_shot_duration": "2-4s",
+      "key_techniques": "leverage emphasis, grip strength, positional control, breathing visibility",
+      "camera_priority": "locked wide or extreme close-up, minimal motion",
+      "audio_priority": "breathing, mat friction, silence as tool",
+      "best_directors": ["Sofia Coppola", "Jane Campion", "Chloé Zhao"]
+    },
+    "boxing": {
+      "aliases": ["boxing", "pugilism"],
+      "pacing": "medium-fast",
+      "avg_shot_duration": "0.8-1.5s",
+      "key_techniques": "footwork, guard integrity, head movement, torso targeting",
+      "camera_priority": "profile angles, head-height camera, hand-speed tracking",
+      "audio_priority": "glove contact distinct, breathing effort, ring acoustics",
+      "best_directors": ["Kathryn Bigelow", "Scorsese", "David O. Russell"]
+    },
+    "muay_thai": {
+      "aliases": ["muay thai", "thai boxing", "eight-point strikes"],
+      "pacing": "medium",
+      "avg_shot_duration": "1.0-2.0s",
+      "key_techniques": "clinch work, eight-point strikes, knee/elbow emphasis, rotational power",
+      "camera_priority": "clinch-close framing, rotational tracking, leg emphasis",
+      "audio_priority": "clinch sound details, strikes layered (kick/knee/elbow distinct)",
+      "best_directors": ["Park Chan-wook", "Denis Villeneuve"]
+    },
+    "sword_fighting": {
+      "aliases": ["sword", "blades", "sword duel", "swordplay"],
+      "pacing": "medium-slow",
+      "avg_shot_duration": "1.5-3.0s",
+      "key_techniques": "point clarity, footwork spacing, blade interaction, line geometry",
+      "camera_priority": "line-based geometry, steel/light reflection emphasis",
+      "audio_priority": "blade clash ringing, whoosh sounds, impact resonance",
+      "best_directors": ["Park Chan-wook", "Denis Villeneuve", "Sofia Coppola (slow)"]
+    },
+    "kickboxing": {
+      "aliases": ["kickboxing", "hybrid striking", "leg-heavy"],
+      "pacing": "medium-fast",
+      "avg_shot_duration": "0.9-1.8s",
+      "key_techniques": "leg-heavy strikes, stance rotation, balance emphasis, power visible",
+      "camera_priority": "full-body emphasis to show leg extension, rotation tracking",
+      "audio_priority": "kick impact distinct, body strikes layered",
+      "best_directors": ["Kathryn Bigelow", "Park Chan-wook"]
+    },
+    "professional_wrestling": {
+      "aliases": ["wrestling", "pro wrestling", "sports entertainment"],
+      "pacing": "slow-medium",
+      "avg_shot_duration": "2-3s",
+      "key_techniques": "carry dynamics, height differential, staged impact, partner coordination",
+      "camera_priority": "full-body to show carry, theatrical framing, crowd-facing",
+      "audio_priority": "body contact variety, crowd reaction, dramatic underscore",
+      "best_directors": ["Greta Gerwig", "Pedro Almodóvar", "Scorsese"]
+    }
+  },
+
+  "director_pacing_reference": {
+    "sofia_coppola": {
+      "hold_time_min": "2.5s",
+      "camera_motion": "very slow push-in (5+ seconds for 2m) or static",
+      "cutting_style": "minimal, slow dissolves",
+      "avg_shot_duration": "4-8s",
+      "impact_hold": "0.4-0.5s (extended)",
+      "audio_approach": "minimal music, breathing emphasis, silence as tool"
+    },
+    "kathryn_bigelow": {
+      "hold_time_min": "0.5-1.0s",
+      "camera_motion": "handheld with micro-wobble, frequent reframing",
+      "cutting_style": "rapid cuts, tight editing",
+      "avg_shot_duration": "0.4-1.0s",
+      "impact_hold": "0.15-0.2s (quick confirmation)",
+      "audio_approach": "layered impacts, distinct frequencies, tension-building"
+    },
+    "park_chan_wook": {
+      "hold_time_min": "2.0-3.0s",
+      "camera_motion": "slow lateral tracking, rotational pans, geometric",
+      "cutting_style": "composed shots, longer holds for composition",
+      "avg_shot_duration": "2-4s",
+      "impact_hold": "0.3-0.4s (with geometric frame emphasis)",
+      "audio_approach": "baroque, musical intervals, color-coded sound"
+    },
+    "denis_villeneuve": {
+      "hold_time_min": "2.5s landscape, 1.0s action",
+      "camera_motion": "slow push-in, very wide shots, landscape emphasis",
+      "cutting_style": "patient setup, fast exchange, slow recovery",
+      "avg_shot_duration": "2-4s",
+      "impact_hold": "0.25-0.3s (with wide frame context)",
+      "audio_approach": "environmental, minimalist, tension through positioning"
+    },
+    "chloe_zhao": {
+      "hold_time_min": "2-2.5s",
+      "camera_motion": "minimal motion, static mostly, organic handheld",
+      "cutting_style": "long takes, minimal cutting",
+      "avg_shot_duration": "4-8s",
+      "impact_hold": "0.2-0.3s (natural recovery visible)",
+      "audio_approach": "ambient, breathing, authentic effort sounds, silence"
+    },
+    "lynne_ramsay": {
+      "hold_time_min": "1.5-2.0s",
+      "camera_motion": "rapid fractured cuts, aggressive handheld",
+      "cutting_style": "sensory layers, textural emphasis",
+      "avg_shot_duration": "0.3-2.0s (variable)",
+      "impact_hold": "0.2-0.3s mixed with rapid cuts",
+      "audio_approach": "textural layered, sensory emphasis, psychological soundscape"
+    },
+    "greta_gerwig": {
+      "hold_time_min": "2-3s",
+      "camera_motion": "choreographed, musical rhythm integrated",
+      "cutting_style": "composed shots emphasizing movement grace",
+      "avg_shot_duration": "2-4s",
+      "impact_hold": "0.3-0.4s (with playful energy)",
+      "audio_approach": "musical, beat-synchronized, whimsical"
+    },
+    "jane_campion": {
+      "hold_time_min": "2-3s",
+      "camera_motion": "slow push-in, rare pans, sensory focus",
+      "cutting_style": "long contemplative takes",
+      "avg_shot_duration": "3-5s",
+      "impact_hold": "0.4-0.5s (sensory emphasis)",
+      "audio_approach": "proprioceptive, sensory texture, intimate"
+    }
+  },
+
+  "camera_technique_vocabulary": {
+    "motion_types": [
+      "static/hold frame - completely still, no motion, forbid drift explicitly",
+      "slow push-in - camera moves toward subject at 40-60% of action speed",
+      "slow arc tracking - camera arcs around subject maintaining subject in frame center",
+      "handheld wobble - 2-4 Hz micro-motion, ±1-2 pixels, continuous",
+      "handheld reframing - deliberate pan/tilt following action, 1-2 second moves",
+      "slow lateral tracking - camera tracks side-to-side at 25-40% of action speed",
+      "dynamic handheld following - camera follows subject at 60-80% of speed",
+      "pull-back arc - camera arcs away from action, expanding frame",
+      "slow push-out - camera moves away from subject slowly (opposite of push-in)",
+      "tilting arc - camera tilts vertically following vertical movement",
+      "rotating pan - smooth rotational camera motion around subject"
+    ],
+    "distance_zones": [
+      "extreme close-up - faces, hands, contact points (0.3-1m)",
+      "close-up - upper body, reaction (1-2m)",
+      "medium close - torso to head (2-4m)",
+      "medium - full body (4-8m)",
+      "medium wide - two full bodies with environment (8-12m)",
+      "wide - establishing, multiple people, environment (12-20m)",
+      "very wide - landscape context, full scene (20m+)"
+    ],
+    "angle_positions": [
+      "profile - 90 degrees to subject motion (optimal for seeing strikes)",
+      "45-degree - semi-profile, shows direction and impact",
+      "frontal - directly facing subject (good for reactions, poor for side strikes)",
+      "low angle - camera looking up (power emphasis)",
+      "high angle - camera looking down (vulnerability/defeat emphasis)",
+      "over-shoulder - one character's POV looking at other",
+      "reverse angle - opposite side from previous shot (cutting between two speakers)",
+      "z-axis diagonal - foreground vs background creating depth (optimal for composition)"
+    ],
+    "focus_strategies": [
+      "deep focus - f/5.6-f/8, everything sharp (establish clarity)",
+      "medium focus - f/3.5-f/5.6, main subject sharp, background slightly soft",
+      "shallow focus - f/1.4-f/2.8, main subject sharp, background very blurred (isolate subject)",
+      "rack focus - focus shifts from one plane to another during shot (revelation)",
+      "soft focus - deliberate slight blur across frame (dreamy, emotional)"
+    ]
+  },
+
+  "high_speed_compensation_strategies": [
+    {
+      "name": "Slow Push-In (Kurosawa Rule)",
+      "when": "Action running at maximum speed",
+      "how": "Camera slowly pushes in 1-3m over 3-6s at 40-60% of action speed",
+      "why": "Background blur + psychological 'closer=better detail' effect",
+      "example_prompt": "slow push-in over 3 seconds from 15m to 12m, background progressively blurs"
+    },
+    {
+      "name": "Static Hold at Impact (Lee Rule)",
+      "when": "Force connection moment",
+      "how": "Completely static hold for 0.2-0.3s, no panning/zooming/drift",
+      "why": "Static frame = psychological 'this is important' signal",
+      "example_prompt": "camera becomes completely static for 0.3 seconds, isolating impact"
+    },
+    {
+      "name": "Arc Tracking (Chan Rule)",
+      "when": "Rapid lateral movement",
+      "how": "Camera arcs at 40-60% of movement speed, fighter passes through arc",
+      "why": "Relative motion reduced = perceived clarity",
+      "example_prompt": "arc tracking at 40% of strike speed maintaining fighter center-frame"
+    },
+    {
+      "name": "Handheld Tension (Bigelow Rule)",
+      "when": "Documentary-verite style desired",
+      "how": "Micro-wobble (2-4 Hz, ±1-2 pixels) + occasional micro-refocus",
+      "why": "Handheld = urgent, real-time",
+      "example_prompt": "handheld camera with continuous micro-wobble creating urgency"
+    },
+    {
+      "name": "Multiple Rapid Cuts (Editing Rule)",
+      "when": "Maximum speed action",
+      "how": "Cut to new angle right as blur peaks, 0.3-0.5s per cut max",
+      "why": "Cut = new information = feels faster, blur hidden by transition",
+      "example_prompt": "rapid cuts every 0.4s between different angles of striking sequence"
+    }
+  ],
+
+  "timing_budgeting_rules": [
+    "Establishing shots: 1.5-2.5s minimum (let composition breathe)",
+    "Held beats (no camera motion): 2.5s minimum",
+    "Slow camera moves: 3-6s typical for 2-3m movement",
+    "Fast camera move: 0.3-1.0s maximum",
+    "Strike exchange: 0.6-1.2s per camera angle",
+    "Impact moment: 0.2-0.5s hold (minimum 0.2s to register)",
+    "Recovery/breathing: 1.0-2.0s to show exhaustion/reset",
+    "Fast cuts (HK style): 0.3-0.8s per shot",
+    "Medium cuts (boxing, kickboxing): 0.8-1.5s per shot",
+    "Slow contemplative (BJJ, Coppola): 2-4s per shot",
+    "Climax beat placement: Never in final 10% of total duration"
+  ],
+
+  "audio_design_layers": {
+    "diegetic": [
+      "Impact sounds - hits, blocks, kicks (vary by martial art)",
+      "Breathing - audible exhaustion, effort, kiai/yell",
+      "Environmental - water drips, wind, rain, reverb, footsteps",
+      "Body sounds - fabric rustles, joints popping, muscle tension",
+      "Object sounds - railing contact, ground impact, chair scrape"
+    ],
+    "non_diegetic": [
+      "Music - instrumental, beats, sustained notes, silence as primary",
+      "Heartbeat - psychological tension layer",
+      "Whisper/voice-over - rare, for internal monologue",
+      "Sound design layers - textural (Ramsay), minimal (Coppola)"
+    ],
+    "frequency_targeting": [
+      "Punch impacts: 2-4 kHz (mid-high punch sound)",
+      "Kick impacts: 1-3 kHz (lower, heavier impact)",
+      "Block sounds: 3-6 kHz (high, sharp, defensive)",
+      "Breathing: 100-500 Hz (low, prominent in mix)",
+      "Blade clash: 5-8 kHz (very high, ringing resonance)",
+      "Cloth/fabric: 2-5 kHz (dynamic range)"
+    ]
+  },
+
+  "validation_checklist": [
+    "Task type (T2VA/I2VA/etc.) stated correctly",
+    "Duration matches target (sum timing chart blocks)",
+    "Director style evident in pacing, framing, color choices",
+    "Static shots explicitly forbid drift (not just 'static')",
+    "All actions are observable behavior (not emotion/motivation)",
+    "Climax beat positioned before final 10% of duration",
+    "Martial art choreography authentic to selected style",
+    "High-speed compensation rule applied (push-in/holds/arcs/cuts/handheld)",
+    "All cuts and transitions timestamped to 0.1s precision",
+    "Audio design supports visual narrative (impacts clear, breathing sync)",
+    "Prompt is under 2000 tokens (H3 efficiency)",
+    "Timing chart shown to user for verification before generation"
+  ],
+
+  "common_mistakes_to_avoid": [
+    "Vague action descriptions without timing chart (generates generic results)",
+    "Mixing multiple director styles without coherent blend (creates visual chaos)",
+    "High-speed martial art with no cinematography compensation (blurry result)",
+    "Climax beat in final 10% of clip (gets compressed, payoff lost)",
+    "Emotional language instead of observable behavior ('angry punch' vs 'fist impact chin')",
+    "Uniform camera motion throughout (boring, no visual dynamics)",
+    "Ignoring martial art pacing rules (e.g., BJJ treated like HK kung fu)",
+    "Impact moments without 0.2s minimum hold frame (force not registered)",
+    "No audio strategy (purely visual prompt misses rhythm/tension opportunities)",
+    "Cutting every 0.2s for non-Bigelow style (creates disorientation, not desired effect)"
+  ],
+
+  "prompt_template_mini": {
+    "structure": "Task type: T2VA\nDuration: X seconds\n[Shot 1] At 0.0s, [description]\n[Shot 2] At [time]s, [description]\n... [Shot N]\nintegrated_multimodal_description: [one paragraph synthesis]\noverall_soundscape: [audio layers]\nnon_diegetic_music: [music treatment]",
+    "key_rules": [
+      "One [Shot N] block only at true cuts (angle/distance change)",
+      "All actions as observable behavior, never emotion",
+      "Every timestamp to 0.1s precision",
+      "Camera motion as natural prose, not technical specs",
+      "Static shots must forbid drift: 'Camera remains completely static; no pan, tilt, or drift'",
+      "Under 2000 tokens total for MiniMax H3 efficiency"
+    ]
+  },
+
+  "director_blend_examples": {
+    "sofia_coppola_kathryn_bigelow": {
+      "effect": "Intimate tension - contemplative close-ups with handheld urgency",
+      "approach": "Coppola for establishing/recovery shots (2-3s, static/slow push), Bigelow for action (0.5-1.0s, handheld)",
+      "color": "Pastel desaturated with high-contrast faces",
+      "use_case": "Psychological action emphasizing character connection"
+    },
+    "park_chan_wook_denis_villeneuve": {
+      "effect": "Baroque precision - saturated geometry in wide landscapes",
+      "approach": "Park for tactical close-ups (geometric, slow arc), Denis for establishing (wide, patient)",
+      "color": "Saturated with gold/red accents against blue landscape",
+      "use_case": "Large-scale action with compositional emphasis"
+    },
+    "greta_gerwig_kathryn_bigelow": {
+      "effect": "Playful chaos - choreographed action with handheld energy",
+      "approach": "Gerwig for flow/choreography (composed 2-3s, slow-motion arcs), Bigelow for tension (handheld, cuts)",
+      "color": "Saturated playful palette with quick movements",
+      "use_case": "Action-comedy, energetic sequences"
+    }
+  }
+}

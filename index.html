@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智创</title>
+<link rel="preload" as="script" href="/static/workspace-main.js?v=20260926-complete-render-v29">
+<link rel="stylesheet" href="/static/workspace-base.css?v=a15b8d5cfd0c">
+<link rel="stylesheet" href="/static/app-tailwind.css?v=20260921-1">
+<!-- PLATFORM_BOOTSTRAP -->
+<script src="/static/platform-client.js?v=story-sources-1"></script>
+<link rel="stylesheet" href="/static/studio-shell.css?v=20260926-full-title-v28">
+</head>
+<body class="min-h-screen">
+
+<!-- 顶栏 -->
+<header class="sticky top-0 z-40 glass" style="background:rgba(13,10,20,.85);">
+  <div class="max-w-7xl mx-auto px-5 py-3 flex items-center gap-4 flex-wrap">
+    <div class="text-xl font-black tracking-wide shrink-0">🎬 <span class="text-sm font-normal text-gray-400 ml-2">智创</span></div>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-4 text-xs text-gray-400">
+      <span title="大语言模型"><span id="dot-llm" class="dot dot-off"></span> LLM <span id="llm-name" class="text-gray-500"></span></span>
+      <span title="ComfyUI"><span id="dot-comfy" class="dot dot-off"></span> ComfyUI</span>
+      <span title="ffmpeg"><span id="dot-ffmpeg" class="dot dot-off"></span> ffmpeg</span>
+    </div>
+    <span id="team-current-user" class="text-xs text-gray-400"></span>
+    <a data-team-admin href="/team" class="text-sm text-yellow-200">团队管理</a>
+    <a href="/account/password" class="text-xs text-gray-400">修改密码</a>
+    <button onclick="teamLogout()" class="text-xs text-gray-400">退出</button>
+    <button onclick="newProject()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-yellow-400/20 text-yellow-300 transition" title="回到初始创作界面">＋ 新建</button>
+    <button onclick="openTomatoDownloader()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-green-400/20 text-green-300 transition" title="搜索并下载番茄小说">📚 番茄下载</button>
+    <button onclick="openNovelViewer()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-cyan-400/20 text-cyan-300 transition" title="查看已下载小说">📖 小说查看器</button>
+    <button onclick="openSkillsManager()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-cyan-400/20 text-cyan-200 transition" title="管理剧本与视频提示词 Skills">🧩 Skills</button>
+    <button onclick="openNodeManager()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-white/10 transition">节点管理</button>
+    <button onclick="openSettings()" class="text-sm px-3 py-1.5 rounded-lg glass hover:bg-white/10 transition">⚙️ 设置</button>
+  </div>
+</header>
+
+<div class="workspace-grid">
+  <aside class="workspace-sidebar left">
+    <div class="workspace-panel">
+      <div class="flex items-center gap-2"><h3 data-series-scope-title>📁 我的作品</h3><div class="flex-1"></div><button onclick="toggleDramaCreatePanel()" class="text-xs text-yellow-300" title="新建作品">＋</button></div>
+      <p class="text-[11px] text-gray-500 mt-1">连续剧、独立短片与历史记录</p>
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button onclick="loadDramaProjects(false)" class="py-2 rounded-lg glass text-xs hover:bg-white/10">刷新</button>
+      </div>
+      <div id="side-drama-list" class="side-tree"><div class="workspace-muted">正在读取…</div></div>
+      <details id="short-film-panel" class="side-tree mt-2" open>
+        <summary class="side-tree-summary">
+          <span class="side-tree-title">🎬 独立短片</span>
+          <button onclick="event.preventDefault();loadProjects(false)" class="text-xs text-yellow-300" title="刷新短片列表">↻</button>
+        </summary>
+        <div class="side-tree-children" id="side-project-list"><div class="side-tree-empty">正在读取…</div></div>
+      </details>
+    </div>
+    <div class="workspace-panel mt-3">
+      <div class="flex items-center gap-2"><h3>🚀 视频队列</h3><span id="queue-count" class="tag">0</span><span id="queue-workers" class="text-[10px] text-gray-500">节点 0/0</span><div class="flex-1"></div><button onclick="refreshRenderQueue()" class="text-xs text-yellow-300" title="刷新队列">↻</button></div>
+      <div class="flex gap-2 mt-2">
+        <button id="queue-toggle-btn" onclick="toggleRenderQueue()" class="flex-1 py-1.5 rounded-lg glass text-xs hover:bg-yellow-400/20">启动队列</button>
+        <button onclick="pauseRenderQueue()" class="px-2 py-1.5 rounded-lg glass text-xs hover:bg-white/10" title="暂停当前队列">Ⅱ</button>
+      </div>
+      <div id="render-queue-list" class="workspace-list"><div class="workspace-muted">队列为空</div></div>
+    </div>
+  </aside>
+
+<main class="min-w-0 space-y-6">
+
+  <!-- 创作面板 -->
+  <section class="glass rounded-2xl p-6 story-editor">
+    <h2 class="font-bold text-lg mb-1">01 · 故事输入</h2>
+    <p class="text-xs text-gray-500 mb-4">一句话、一个梗概、一段剧本都可以 —— AI自动完成剧本、角色、分镜、视频、成片</p>
+    <textarea id="idea" rows="4" class="w-full bg-black/30 border border-white/10 rounded-xl p-4 text-sm resize-y" placeholder="例如：雨夜街头，一个落魄剑客为了保护小女孩，独战三名黑衣刀客……"></textarea>
+    <div class="mt-3"><button id="story-chat-open" type="button" onclick="openStoryEdit()" class="px-3 py-2 rounded-lg glass text-cyan-200 text-xs">💬 AI 对话修改故事</button></div>
+    <div id="script-import-row" class="flex flex-wrap items-center gap-2 mt-3">
+      <input id="script-import-file" type="file" accept=".txt,.md,.docx,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden" onchange="importFullScript(this)">
+      <button type="button" onclick="document.getElementById('script-import-file').click()" class="px-3 py-2 rounded-lg glass hover:bg-cyan-400/15 text-cyan-200 text-xs">📄 导入完整剧本</button>
+      <span id="script-import-status" class="text-xs text-gray-500">支持 TXT、Markdown、DOCX；导入后会保留原剧情进行结构化</span>
+      <button id="script-import-clear" type="button" onclick="clearImportedScript()" class="hidden text-xs text-gray-400 hover:text-red-300">移除导入</button>
+    </div>
+    <div class="flex items-center gap-2 mt-2 text-xs text-gray-600 story-draft-actions">
+      <span id="idea-count">0 字</span><span>·</span><span id="draft-status">草稿自动保存</span><div class="flex-1"></div>
+      <button id="director-match-btn" onclick="autoMatchDirector()" class="px-3 py-1.5 rounded-lg glass hover:bg-yellow-400/20 text-yellow-300 transition">AI 自动匹配导演台</button>
+      <button onclick="restoreDraft()" class="hover:text-yellow-300 transition">↩ 恢复本地草稿</button>
+      <button onclick="clearDraft()" class="hover:text-red-300 transition">清空</button>
+    </div>
+
+    <!-- V2 导演台：全部规则会自动写入创作要求，无需后端新增接口 -->
+    <div class="soft-panel rounded-2xl p-4 mt-4 story-director">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="font-bold text-sm">02 · 导演方案</div>
+        <div id="director-match-status" class="text-xs text-gray-500">输入梗概后先让 AI 匹配</div>
+        <div class="flex-1"></div>
+        <button onclick="toggleDirectorPanel()" id="director-toggle" class="text-xs text-gray-400 hover:text-yellow-300">收起</button>
+      </div>
+      <div id="director-body">
+        <div class="mb-4 p-3 rounded-xl border border-yellow-400/35 bg-yellow-400/10 story-skills">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="font-bold text-sm text-yellow-200">🧩 生成 Skills</div>
+            <div class="text-xs text-gray-400">按环节选择 Skill；自动模式会根据内容判断</div>
+            <button type="button" onclick="openSkillsManager()" class="ml-auto px-3 py-2 rounded-lg glass text-xs text-cyan-200 hover:bg-cyan-400/15">管理 Skills</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-2 mt-3">
+            <label class="text-xs text-gray-400">剧本解析
+              <select id="script-skill-mode" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" title="选择本项目剧本解析时使用的 Skill"></select>
+            </label>
+            <label class="text-xs text-gray-400">视频提示词
+              <select id="prompt-skill-mode" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" title="选择本项目生成视频提示词时使用的 Skill"></select>
+            </label>
+          </div>
+        </div>
+        <div class="mb-4 p-3 rounded-xl border border-green-400/30 bg-green-400/10 flex flex-wrap items-center gap-3">
+          <label class="flex items-center gap-2 text-sm text-green-100 cursor-pointer select-none" title="合成最终成片时，将剧本对白烧录为底部字幕">
+            <input type="checkbox" id="subtitleEnabled" class="accent-green-400 w-4 h-4">
+            <span class="font-bold">合成时烧录字幕</span>
+          </label>
+          <span class="text-xs text-gray-400">勾选后，最终 MP4 会直接带中文字幕</span>
+        </div>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button class="director-chip" onclick="applyDirectorPreset('douyin60',this)">🔥 抖音60秒爽剧</button>
+          <button class="director-chip" onclick="applyDirectorPreset('reverse30',this)">⚡ 30秒强反转</button>
+          <button class="director-chip" onclick="applyDirectorPreset('story90',this)">🎭 90秒剧情片</button>
+          <button class="director-chip" onclick="applyDirectorPreset('serial',this)">📺 连载追更模式</button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div><label class="field-label">发布平台</label><select id="director-platform" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>抖音</option><option>快手</option><option>视频号</option><option>小红书</option><option>YouTube Shorts</option><option>通用短视频</option></select></div>
+          <div><label class="field-label">目标成片时长</label><select id="director-length" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option value="30">30秒</option><option value="45">45秒</option><option value="60" selected>60秒</option><option value="90">90秒</option><option value="120">120秒</option></select></div>
+          <div><label class="field-label">剧情类型</label><select id="director-genre" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>爽剧 / 逆袭</option><option>系统流</option><option>悬疑反转</option><option>都市情感</option><option>搞笑反差</option><option>甜宠</option><option>复仇</option><option>动作冲突</option><option>自定义</option></select></div>
+          <div><label class="field-label">镜头节奏</label><select id="director-pace" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>快：2~5秒一信息点</option><option selected>中快：4~7秒一信息点</option><option>剧情：6~10秒一信息点</option><option>电影感：允许长镜头</option></select></div>
+          <div><label class="field-label">黄金3秒</label><select id="director-hook" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>先给结果，再解释原因</option><option>直接爆发冲突</option><option>一句反常识台词</option><option>巨大金额/身份反差</option><option>危险/悬念瞬间</option><option>情绪崩溃瞬间</option></select></div>
+          <div><label class="field-label">反转强度</label><select id="director-reversal" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>轻：1次小反转</option><option selected>中：至少2次认知变化</option><option>强：前后身份/局势翻盘</option></select></div>
+          <div><label class="field-label">结尾策略</label><select id="director-ending" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option selected>卡在最大悬念，逼追下一集</option><option>本集闭环 + 新危机</option><option>强爽点收尾</option><option>情绪余韵</option></select></div>
+          <div><label class="field-label">对白密度</label><select id="director-dialogue" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs"><option>低：画面叙事为主</option><option selected>中：对白推动剧情</option><option>高：强对白/短句交锋</option><option>无对白</option></select></div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-3 mt-3">
+          <div class="md:col-span-2"><label class="field-label">本集核心爽点 / 必须出现的桥段</label><input id="director-payoff" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs" placeholder="例如：男主第一次发现10倍返现，余额从几十元瞬间变成几千元"></div>
+          <div><label class="field-label">一致性</label><label class="h-[34px] flex items-center gap-2 px-3 rounded-lg bg-black/20 border border-white/10 text-xs text-gray-300 cursor-pointer"><input id="director-consistency" type="checkbox" checked class="accent-yellow-500">角色身份与场内服装连续</label></div>
+        </div>
+        <!-- 连续剧归属由左侧当前项目和剧集管理维护；保留隐藏字段兼容已有项目数据。 -->
+        <div id="series-context-fields" class="hidden" aria-hidden="true">
+          <input id="series-mode" type="checkbox">
+          <input id="series-name">
+          <input id="episode-no" type="number" min="1" value="1">
+          <input id="prev-summary">
+        </div>
+        <details class="mt-3" onchange="if(this.open)updateDirectorPreview()">
+          <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-300">查看将发送给AI的「导演简报」</summary>
+          <div class="relative mt-2"><pre id="director-preview" class="bg-black/30 border border-white/10 rounded-lg p-3 text-xs text-gray-400 whitespace-pre-wrap max-h-56 overflow-auto"></pre><button onclick="event.preventDefault();copyDirectorBrief()" class="absolute top-2 right-2 text-xs px-2 py-1 rounded glass hover:bg-white/10">复制</button></div>
+        </details>
+        <div class="flex items-center gap-3 mt-4 pt-3 border-t border-white/10">
+          <span class="text-xs text-gray-500">可继续调整上方选项，确认后才会生成剧本。</span>
+          <div class="flex-1"></div>
+          <button id="director-confirm-btn" onclick="confirmDirectorSettings()" class="btn-gold px-5 py-2 rounded-lg text-xs" disabled>确认导演方案</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="story-output"><h3>03 · 生成设置</h3><div class="story-output-grid">
+      <div class="story-output-field"><label class="text-xs text-gray-400">画风</label><select id="style" onchange="toggleCustomStyle()" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <option selected>电影写实</option><option>3D动漫</option><option>日漫二次元</option>
+        <option>国风水墨</option><option>赛博朋克</option><option>港风胶片</option>
+        <option value="__custom__">✏️ 自定义...</option>
+      </select></div>
+      <input id="styleCustom" placeholder="输入画风，如：吉卜力手绘" class="hidden bg-black/30 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm w-44" oninput="this.classList.remove('border-red-400')">
+      <div class="story-output-field"><label class="text-xs text-gray-400">每镜时长</label><select id="shotDuration" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <option value="auto" selected>自动(8~15秒)</option>
+        <option value="8">8秒</option><option value="10">10秒</option><option value="12">12秒</option><option value="15">15秒</option>
+      </select></div>
+      <div class="story-output-field"><label class="text-xs text-gray-400">镜头数（自动不限）</label><select id="shotCount" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <option value="auto" selected>自动</option>
+        <option>3</option><option>4</option><option>5</option><option>6</option><option>8</option><option>10</option><option>12</option><option>15</option>
+      </select></div>
+      <div class="story-output-field"><label class="text-xs text-gray-400">分辨率</label><select id="resolution" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <optgroup label="横屏 16:9">
+          <option value="16:9 (Widescreen)|0.2">0.2MP 608×352</option>
+          <option value="16:9 (Widescreen)|0.3">0.3MP 736×416</option>
+          <option value="16:9 (Widescreen)|0.4" selected>0.4MP 864×480</option>
+          <option value="16:9 (Widescreen)|0.5">0.5MP 960×544</option>
+          <option value="16:9 (Widescreen)|0.6">0.6MP 1056×608</option>
+          <option value="16:9 (Widescreen)|0.7">0.7MP 1152×640</option>
+          <option value="16:9 (Widescreen)|0.8">0.8MP 1216×672</option>
+          <option value="16:9 (Widescreen)|0.9">0.9MP 1280×736</option>
+          <option value="16:9 (Widescreen)|0.98">0.98MP 1344×768</option>
+        </optgroup>
+        <optgroup label="竖屏 9:16">
+          <option value="9:16 (Portrait)|0.2">0.2MP 352×608</option>
+          <option value="9:16 (Portrait)|0.3">0.3MP 416×736</option>
+          <option value="9:16 (Portrait)|0.4">0.4MP 480×864</option>
+          <option value="9:16 (Portrait)|0.5">0.5MP 544×960</option>
+          <option value="9:16 (Portrait)|0.6">0.6MP 608×1056</option>
+          <option value="9:16 (Portrait)|0.7">0.7MP 640×1152</option>
+          <option value="9:16 (Portrait)|0.8">0.8MP 672×1216</option>
+          <option value="9:16 (Portrait)|0.9">0.9MP 736×1280</option>
+          <option value="9:16 (Portrait)|0.98">0.98MP 768×1344</option>
+        </optgroup>
+      </select></div>
+      <div class="story-output-field"><label class="text-xs text-gray-400" title="H3采样步数4~25，越低越快、越高越精细">步数</label><input id="h3Steps" type="number" min="4" max="25" step="1" value="8" title="Dasiwa H3默认8步，可在4~25之间调整" class="bg-black/30 border border-white/10 rounded-lg px-2 py-2 text-sm w-16 text-center"></div>
+</div><div class="story-output-options">
+      <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none" title="开启后：剧本解析完成时流程暂停，您可在资产卡片上传自备参考图（可只传部分，空缺由AI生成），点击继续后流程接着走">
+        <input type="checkbox" id="customAssets" class="accent-yellow-500 w-3.5 h-3.5">自定义参考图
+      </label>
+      <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none" title="先改提示词再生成：开启后，每一镜会先由AI写出提示词，并直接显示在分镜卡片里；您可以先手动修改提示词，点「确认生成此镜」后才会真正开始渲染，不会在您确认前自动生成。参考图环节和全部分镜完成后也都会暂停，方便人工把关。">
+        <input type="checkbox" id="manualMode" class="accent-yellow-500 w-3.5 h-3.5" checked>先改提示词再生成
+      </label>
+      <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer select-none" title="先把全部镜头提示词一次性生成出来，你可以统一编辑提示词、时长、景别，确认一次后再批量生成视频。仅在“先改提示词再生成”开启时生效。">
+        <input type="checkbox" id="promptBatchMode" class="accent-yellow-500 w-3.5 h-3.5" checked>批量编辑全部提示词
+      </label>
+</div><div class="story-submit-actions">
+      <button onclick="loadDramaProjects()" class="px-4 py-2.5 rounded-xl text-sm glass hover:bg-white/10 transition">🎞️ 剧项目</button>
+      <button onclick="openSingle()" class="px-4 py-2.5 rounded-xl text-sm glass hover:bg-white/10 transition">🎬 单镜头生成器</button>
+      <button id="btn-queue-current" onclick="queueCurrentProject()" class="px-4 py-2.5 rounded-xl text-sm glass hover:bg-yellow-400/20 text-yellow-300 transition" title="将当前单集加入视频生成队列">🚀 加入视频队列</button>
+      <button id="btn-run" onclick="runPipeline()" class="btn-gold px-8 py-2.5 rounded-xl text-sm">生成剧本</button>
+    </div>
+    </div>
+    <div class="flex items-center justify-between mt-2"><div class="text-[11px] text-yellow-300/90">流程：AI 匹配导演台 → 人工调整确认 → 生成并查阅剧本 → 确认后继续制作</div><div class="text-right text-gray-600" style="font-size:10px;">快捷键 <span class="kbd">Ctrl/⌘ + Enter</span> 生成 · <span class="kbd">Ctrl/⌘ + S</span> 保存草稿</div></div>
+  </section>
+
+  <!-- 剧本 -->
+  <section id="script-box" class="hidden space-y-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div class="glass rounded-2xl p-5 lg:col-span-2">
+        <h3 class="font-bold mb-3">👥 角色</h3>
+        <div id="char-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="font-bold mb-3">🏞️ 场景</h3>
+        <div id="scene-list" class="grid grid-cols-1 gap-3"></div>
+      </div>
+      <div class="glass rounded-2xl p-5">
+        <h3 class="font-bold mb-3">🗡️ 道具</h3>
+        <div id="prop-list" class="grid grid-cols-1 gap-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 分镜 -->
+  <section id="shots-box" class="glass rounded-2xl p-6 hidden">
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <h3 class="font-bold">🎥 分镜短片</h3>
+      <div class="flex-1"></div>
+      <span id="rerender-selected-count" class="tag">已选重制 0 镜</span>
+      <button onclick="selectRenderedShots(true)" class="text-xs px-3 py-2 rounded-lg glass hover:bg-white/10 transition">全选片段</button>
+      <button onclick="selectRenderedShots(false)" class="text-xs px-3 py-2 rounded-lg glass hover:bg-white/10 transition">清空选择</button>
+      <button id="btn-batch-rerender-current" onclick="batchRerenderSelectedShots()" class="text-xs px-3 py-2 rounded-lg glass hover:bg-yellow-400/20 transition">🔄 批量重制选中</button>
+    </div>
+    <div id="shot-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+  </section>
+
+  <!-- 成片 -->
+  <section id="final-box" class="glass rounded-2xl p-6 hidden text-center">
+    <h3 class="font-bold text-xl mb-1">🏆 成片出炉</h3>
+    <p id="final-title" class="gold text-sm mb-4"></p>
+    <p id="final-version-status" class="text-sm text-yellow-300 mb-3 hidden"></p>
+    <video id="final-video" controls class="max-w-3xl w-full mx-auto rounded-xl shadow-2xl"></video>
+    <div class="mt-4">
+      <a id="final-dl" href="#" download class="btn-gold px-8 py-2.5 rounded-xl text-sm inline-block">⬇️ 下载成片</a>
+      <button id="final-subtitle-btn" onclick="burnFinalSubtitles()" class="ml-2 px-5 py-2.5 rounded-xl text-sm border border-green-400/50 text-green-200 hover:bg-green-400/15">📝 一键加字幕</button>
+      <p id="final-subtitle-status" class="text-xs text-gray-500 mt-2">按当前对白重新合成并烧录中文字幕</p>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-gray-600 py-6">智创 · Krea2 Turbo 绘图 × Dasiwa H3 8步视频 × 内置Qwen3.5-4B</footer>
+</main>
+
+  <aside class="workspace-sidebar right">
+    <section id="pipeline-box" class="pipeline-sidebar hidden">
+      <div class="pipeline-heading">
+        <div class="min-w-0">
+          <h2 class="font-bold">🎞️ 制作流水线</h2>
+          <span id="proj-title" class="tag pipeline-project"></span>
+          <span id="run-clock" class="text-xs text-gray-600"></span>
+        </div>
+        <div class="pipeline-actions">
+          <button id="btn-cancel-pipeline" onclick="cancelPipeline()" class="hidden text-red-300" title="终止制作" aria-label="终止制作">⏹</button>
+          <button onclick="copyLogs()" class="glass hover:bg-white/10 transition" title="复制日志" aria-label="复制日志">📋</button>
+          <button onclick="clearLogs()" class="glass hover:bg-white/10 transition" title="清空日志" aria-label="清空日志">🧹</button>
+        </div>
+      </div>
+      <div class="flex items-start gap-0 mb-5" id="stages">
+        <!-- 阶段节点由JS渲染 -->
+      </div>
+      <div id="script-progress" class="hidden mb-4" aria-live="polite">
+        <div class="flex justify-between gap-2 text-xs mb-2"><span id="script-progress-phase">准备生成剧本</span><span id="script-progress-count" class="text-gray-400"></span></div>
+        <progress id="script-progress-bar" max="7" style="width:100%;height:10px;accent-color:#d4af37" aria-label="剧本生成阶段进度"></progress>
+        <div id="script-progress-time" class="text-xs text-gray-500 mt-1"></div>
+      </div>
+      <div id="log" class="bg-black/40 rounded-xl p-3 h-36 overflow-y-auto text-xs font-mono text-gray-400 space-y-1"></div>
+    </section>
+  </aside>
+</div>
+
+<div id="image-lightbox" class="image-lightbox" onclick="closeImageLightbox(event)">
+  <button type="button" onclick="closeImageLightbox()" class="absolute top-5 right-6 text-3xl text-gray-300 hover:text-white" aria-label="关闭大图">×</button>
+  <div class="text-center" onclick="event.stopPropagation()">
+    <img id="image-lightbox-img" alt="资产大图预览">
+    <div id="image-lightbox-caption" class="image-lightbox-caption"></div>
+  </div>
+</div>
+
+<!-- 小说查看器 -->
+<div id="novel-viewer-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80">
+  <div class="glass rounded-2xl p-5 w-[1200px] max-w-[97vw] max-h-[94vh] overflow-hidden flex flex-col" style="background:#171224;">
+    <div class="flex items-center gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-lg">📖 小说查看器</h3>
+        <p class="text-xs text-gray-500 mt-1">阅读已下载小说，选择章节后让 AI 提取片段或生成先导片/预告片剧本</p>
+      </div>
+      <div class="flex-1"></div>
+      <button onclick="loadNovelBooks()" class="text-xs px-3 py-1.5 rounded glass hover:bg-white/10">↻ 刷新书库</button>
+      <button onclick="closeNovelViewer()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+    <div class="grid grid-cols-[220px_220px_minmax(0,1fr)] gap-3 min-h-0 flex-1">
+      <section class="glass rounded-xl p-3 min-h-0 flex flex-col">
+          <div class="flex items-center gap-2 mb-2"><h4 class="font-bold text-sm">小说库</h4><span id="novel-book-count" class="tag">0本</span></div>
+        <input id="novel-book-search" oninput="renderNovelBooks()" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs mb-2" placeholder="搜索书名或作者">
+        <div id="novel-book-list" class="space-y-1 overflow-y-auto min-h-0"><div class="workspace-muted">正在读取…</div></div>
+      </section>
+      <section class="glass rounded-xl p-3 min-h-0 flex flex-col">
+        <div id="novel-meta" class="mb-2 text-xs text-gray-500">请选择一本小说</div>
+        <div class="flex items-center justify-between text-[11px] text-gray-500 mb-2"><span>点击章节阅读</span><span id="novel-selected-count">已选0章</span></div>
+        <div id="novel-chapter-list" class="space-y-1 overflow-y-auto min-h-0"><div class="workspace-muted">章节列表会显示在这里</div></div>
+      </section>
+      <section class="glass rounded-xl p-4 min-h-0 flex flex-col">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <h4 id="novel-reader-title" class="font-bold text-base">请选择章节</h4>
+          <div class="flex-1"></div>
+          <button onclick="sendCurrentNovelChapterToStory()" class="text-xs px-2.5 py-1.5 rounded glass hover:bg-yellow-400/20 text-yellow-300" title="把当前章节正文发送到主界面的故事输入框">⬆ 发送到故事窗口</button>
+          <button onclick="novelChapterMove(-1)" class="text-xs px-2.5 py-1.5 rounded glass hover:bg-white/10">← 上一章</button>
+          <button onclick="novelChapterMove(1)" class="text-xs px-2.5 py-1.5 rounded glass hover:bg-white/10">下一章 →</button>
+        </div>
+        <div id="novel-reader-content" class="novel-reader flex-1 min-h-0 overflow-y-auto rounded-lg bg-black/20 p-4">请选择一本小说和章节</div>
+        <div class="border-t border-white/10 mt-3 pt-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-gray-400">AI工具：</span>
+            <select id="novel-highlight-scope" class="bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs" title="选择AI提取范围"><option value="current">当前章节</option><option value="selected">选中章节</option><option value="all">整本小说</option></select>
+            <button id="novel-highlights-btn" onclick="extractNovelHighlights()" class="text-xs px-3 py-1.5 rounded glass hover:bg-yellow-400/20 text-yellow-300">✨ 提取精彩片段</button>
+            <select id="novel-script-mode" class="bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs"><option>先导片</option><option>预告片</option></select>
+            <button id="novel-script-btn" onclick="generateNovelTrailerScript()" class="text-xs px-3 py-1.5 rounded glass hover:bg-cyan-400/20 text-cyan-300">🎬 生成剧本</button>
+            <span id="novel-ai-status" class="text-xs text-gray-500"></span>
+          </div>
+          <div class="mt-3 rounded-lg border border-yellow-400/20 bg-yellow-400/5 p-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs text-yellow-200">批量做成连续剧：</span>
+              <select id="novel-queue-series" class="bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs min-w-44" title="选择目标剧项目">
+                <option value="">请选择目标剧项目</option>
+              </select>
+              <label class="text-xs text-gray-400">起始集数</label>
+              <input id="novel-queue-start-episode" type="number" min="1" value="1" class="w-20 bg-black/30 border border-white/10 rounded-lg px-2 py-1.5 text-xs" title="批量创建的起始集数">
+              <button type="button" onclick="selectNovelAllChapters()" class="text-xs px-2.5 py-1.5 rounded glass hover:bg-white/10" title="选择当前小说的全部章节">全选章节</button>
+              <button id="novel-queue-btn" type="button" onclick="queueNovelSelectedEpisodes()" class="text-xs px-3 py-1.5 rounded glass hover:bg-yellow-400/20 text-yellow-200" title="按选中的章节创建连续剧并加入自动化队列">🚀 创建并加入队列</button>
+            </div>
+            <div class="mt-1 text-[11px] text-gray-500">选择章节后，会沿用目标剧项目最近一集的自动化参数，逐集生成剧本、资产、分镜和成片。</div>
+          </div>
+          <div id="novel-ai-output" class="hidden mt-3 max-h-56 overflow-y-auto rounded-lg bg-black/30 p-3 text-xs whitespace-pre-wrap"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- 独立节点管理 -->
+<div id="nodes-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70">
+  <div class="glass rounded-2xl p-6 w-[640px] max-h-[85vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4"><h3 class="font-bold text-lg">ComfyUI 节点管理</h3><div class="flex-1"></div><button onclick="closeNodeManager()" class="text-gray-400 text-xl" aria-label="关闭节点管理">×</button></div>
+      <div id="cfg-comfy-section" class="space-y-2">
+        <div class="flex items-center justify-between"><label class="text-xs text-gray-400">ComfyUI 节点</label><button type="button" id="nodes-add" onclick="addComfyServer()" class="px-3 py-1.5 rounded-lg border border-white/10">新增节点</button></div>
+        <p class="text-xs text-gray-500">每台节点可单独启用或停用；停用只会停止任务分发，不会关闭其他节点或远程服务器进程。</p>
+        <div id="cfg-comfy-list" class="space-y-2"></div><div id="cfg-comfy-health" class="space-y-1 text-xs text-gray-400" aria-live="polite"></div>
+        <p class="text-xs text-gray-500">所有启用且在线的节点都会参与任务分发；系统优先使用空闲节点，并轮流分配任务；有前后依赖的镜头需等待前置镜头完成。</p>
+      </div>
+    <p id="nodes-message" class="text-xs text-gray-400 my-3" aria-live="polite"></p>
+    <button id="nodes-save" onclick="saveNodes()" class="btn-gold w-full py-2.5 rounded-xl">保存节点配置</button>
+  </div>
+</div>
+
+<!-- 设置模态框 -->
+<div id="settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70">
+  <div class="glass rounded-2xl p-6 w-[520px] max-h-[85vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4"><h3 class="font-bold text-lg">⚙️ API 与生成设置</h3><div class="flex-1"></div><button onclick="closeSettings()" class="text-gray-400 hover:text-white text-xl">×</button></div>
+    <div class="space-y-4 text-sm">
+      <div>
+        <label class="text-xs text-gray-400 block mb-1">大语言模型来源</label>
+        <select id="cfg-llm-mode" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2">
+          <option value="local">本地模型服务（需填写自己的服务地址）</option>
+          <option value="custom">自定义 API（OpenAI 兼容）</option>
+        </select>
+      </div>
+      <div id="cfg-local-box" class="space-y-2 hidden"><label class="text-xs text-gray-400">本地模型服务地址</label><input id="cfg-local-url" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="http://你的模型服务器:8084"><label class="text-xs text-gray-400">模型名</label><input id="cfg-local-model" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="模型名"></div>
+      <p class="text-xs text-gray-400">模型 API 按账号独立保存；普通成员的 ComfyUI 节点由管理员分配。生成任务使用项目所属用户的配置。</p>
+      <div id="cfg-custom-box" class="space-y-3 hidden">
+        <div class="flex items-center gap-2">
+          <select id="cfg-profile" onchange="switchLLMProfile(this.value)" class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg px-3 py-2"></select>
+          <button type="button" onclick="addLLMProfile()" class="px-3 py-2 rounded-lg border border-white/10">新增</button>
+          <button id="cfg-delete-profile" type="button" onclick="deleteLLMProfile()" class="px-3 py-2 rounded-lg border border-white/10 text-red-400">删除</button>
+        </div>
+        <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
+          <label class="text-xs text-gray-400">配置名称</label><input id="cfg-profile-name" oninput="renameLLMProfile()" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="例如：云端 API">
+          <label class="text-xs text-gray-400">Base URL</label><input id="cfg-base-url" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="https://api.example.com/v1">
+          <label class="text-xs text-gray-400">API Key</label><input id="cfg-api-key" type="password" autocomplete="off" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="无需密钥可填 EMPTY">
+          <label class="text-xs text-gray-400">模型名</label><select id="cfg-model" aria-label="选择模型" onchange="selectLLMModel(this.value)" class="w-full min-w-0 bg-black/30 border border-white/10 rounded-lg px-3 py-2"><option value="">请先获取模型列表</option></select>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="testCurrentLLM(false)" class="flex-1 py-2 rounded-lg border border-white/10 hover:bg-white/10">测试连通性</button>
+          <button type="button" onclick="testCurrentLLM(true)" class="flex-1 py-2 rounded-lg border border-white/10 hover:bg-white/10">获取模型列表</button>
+        </div>
+        <p id="cfg-llm-test" class="text-xs text-gray-500"></p>
+      </div>
+      <div class="space-y-3 border-t border-white/10 pt-4">
+        <label class="text-xs text-gray-400 block mb-1">图片 / 视频生成服务商</label>
+        <select id="cfg-media-provider" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2">
+          <option value="comfyui">本地 / 局域网 ComfyUI</option>
+          <option value="jimeng">即梦 API（局域网）</option>
+          <option value="runninghub">RunningHub（预留）</option>
+        </select>
+        <div id="cfg-jimeng-box" class="hidden space-y-2">
+          <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
+            <label class="text-xs text-gray-400">API Base URL</label><input id="cfg-jimeng-base" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="http://192.168.31.176:8001">
+            <label class="text-xs text-gray-400">API Key</label><input id="cfg-jimeng-key" type="password" autocomplete="off" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="jm_...">
+            <label class="text-xs text-gray-400">图片模型</label><select id="cfg-jimeng-image-model" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2"><option value="">请先获取官方模型列表</option></select>
+            <label class="text-xs text-gray-400">视频模型</label><select id="cfg-jimeng-video-model" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2"><option value="">请先获取官方模型列表</option></select>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="testJimeng()" class="flex-1 py-2 rounded-lg border border-white/10 hover:bg-white/10">测试即梦连接</button>
+            <button type="button" onclick="loadJimengModels()" class="flex-1 py-2 rounded-lg border border-white/10 hover:bg-white/10">获取模型列表</button>
+          </div>
+          <p id="cfg-jimeng-test" class="text-xs text-gray-500"></p>
+          <p class="text-xs text-gray-500">服务地址填写服务电脑的局域网 IP，不要填写 localhost。参考图会由本系统自动编码上传。</p>
+        </div>
+        <div id="cfg-runninghub-box" class="hidden space-y-3">
+          <div class="flex items-center justify-between"><span class="text-xs text-yellow-200">RunningHub 接入预留</span><span class="tag">尚未接入</span></div>
+          <p class="text-xs text-gray-500">RunningHub 与 ComfyUI、即梦 API 独立配置。这里预留云端工作流地址、图片工作流和视频工作流。</p>
+          <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
+            <label class="text-xs text-gray-400">API Base URL</label><input id="cfg-runninghub-base" disabled class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="接入后配置">
+            <label class="text-xs text-gray-400">API Key</label><input id="cfg-runninghub-key" disabled type="password" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="接入后配置">
+            <label class="text-xs text-gray-400">图片工作流 ID</label><input id="cfg-runninghub-image-workflow" disabled class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="接入后配置">
+            <label class="text-xs text-gray-400">视频工作流 ID</label><input id="cfg-runninghub-video-workflow" disabled class="bg-black/30 border border-white/10 rounded-lg px-3 py-2" placeholder="接入后配置">
+          </div>
+          <div class="flex gap-2"><button type="button" disabled class="flex-1 py-2 rounded-lg border border-white/10">测试连接 · 待接入</button><button type="button" disabled class="flex-1 py-2 rounded-lg border border-white/10">读取工作流 · 待接入</button></div>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400 block mb-1">H3 采样步数（4~25，默认10；越低越快、越高越精细）— 与主界面「步数」同步</label>
+        <div class="flex items-center gap-3">
+          <input id="cfg-steps" type="range" min="4" max="25" step="1" value="8" class="flex-1" oninput="document.getElementById('cfg-steps-val').textContent=this.value">
+          <span id="cfg-steps-val" class="text-sm gold w-8 text-center">8</span>
+        </div>
+      </div>
+      <div class="flex items-start justify-between gap-3 glass rounded-lg px-3 py-2.5">
+        <div>
+          <label class="text-xs text-gray-300 block">⚡ LLM/ComfyUI 互斥模式（低显存友好）</label>
+          <p class="text-gray-500 mt-1" style="font-size:11px;line-height:1.5;">开启后两个服务不同时运行：LLM一次性写完全部文案（剧本+所有镜头提示词）→自动关闭→启动ComfyUI批量渲染，全自动切换无需手动操作。仅使用内置本地LLM时生效（自定义API不占本地显存，无需开启）。</p>
+        </div>
+        <input id="cfg-exclusive" type="checkbox" class="w-5 h-5 mt-0.5 accent-yellow-500 flex-shrink-0 cursor-pointer">
+      </div>
+
+      <div class="glass rounded-xl p-3 space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <label class="text-xs text-gray-300 block">📺 Story Bible 连续剧锁定</label>
+            <p class="text-gray-500 mt-1" style="font-size:11px;line-height:1.5;">同名角色复用身份参考图；服装按剧情换装，同一场连续戏保持连续，无需为换装新建角色。</p>
+          </div>
+          <input id="cfg-story-bible" type="checkbox" class="w-5 h-5 accent-yellow-500">
+        </div>
+        <div class="border-t border-white/10 pt-3">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <div>
+              <label class="text-xs text-gray-300 block">🧪 AI 自动审片</label>
+              <p class="text-gray-500 mt-1" style="font-size:11px;line-height:1.5;">每镜生成后抽帧检查串脸、畸变、静帧、构图和连续性；低分镜自动补约束重渲染。</p>
+            </div>
+            <input id="cfg-auto-review" type="checkbox" class="w-5 h-5 accent-yellow-500">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="text-xs text-gray-500 block mb-1">自动重做阈值</label><input id="cfg-review-threshold" type="number" min="40" max="95" value="72" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs text-gray-500 block mb-1">最多自动重做</label><select id="cfg-review-rerenders" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm"><option value="0">0次</option><option value="1" selected>1次</option><option value="2">2次</option><option value="3">3次</option></select></div>
+          </div>
+        </div>
+      </div>
+      <button onclick="saveSettings()" class="btn-gold w-full py-2.5 rounded-xl">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Skills 管理 -->
+<div id="skills-modal" class="fixed inset-0 z-[65] hidden items-center justify-center bg-black/80">
+  <div class="glass rounded-2xl p-5 w-[1120px] max-w-[96vw] max-h-[92vh] overflow-hidden flex flex-col" style="background:#171224;">
+    <div class="flex items-center gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-lg">🧩 Skills 管理</h3>
+        <p class="text-xs text-gray-500 mt-1">统一管理剧本解析、视频提示词及后续环节可复用的规则技能。</p>
+      </div>
+      <div class="flex-1"></div>
+      <input id="skills-import-file" type="file" accept=".md,.txt,text/markdown,text/plain" class="hidden" onchange="importSkillFile(this)">
+      <button onclick="$('skills-import-file').click()" class="text-xs px-3 py-2 rounded-lg glass hover:bg-cyan-400/20 text-cyan-200">📥 导入</button>
+      <button onclick="newSkillForm()" class="text-xs px-3 py-2 rounded-lg btn-gold">＋ 新建</button>
+      <button onclick="closeSkillsManager()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭 Skills 管理">×</button>
+    </div>
+    <div class="grid grid-cols-[300px_minmax(0,1fr)] gap-4 min-h-0 flex-1">
+      <aside class="soft-panel rounded-xl p-3 min-h-0 flex flex-col">
+        <div class="flex items-center gap-2 mb-2"><span class="text-xs text-gray-400">技能列表</span><span id="skills-count" class="tag">0</span><div class="flex-1"></div><button onclick="loadSkills()" class="text-xs text-yellow-300" title="刷新 Skills">↻</button></div>
+        <input id="skills-search" oninput="renderSkillsList()" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs mb-2" placeholder="搜索名称或阶段…">
+        <div id="skills-list" class="space-y-2 overflow-y-auto min-h-0"></div>
+      </aside>
+      <section class="min-h-0 overflow-y-auto">
+        <div id="skills-empty" class="workspace-muted">选择一个 Skill，或点击“新建”。</div>
+        <div id="skills-editor" class="hidden space-y-3">
+          <div class="flex items-center gap-2"><span id="skills-editor-kind" class="tag">自定义</span><span id="skills-editor-id" class="text-[10px] text-gray-500 truncate"></span></div>
+          <div><label class="field-label">名称</label><input id="skill-edit-name" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="field-label">说明</label><input id="skill-edit-description" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="说明这个 Skill 解决什么问题"></div>
+          <div>
+            <label class="field-label">可使用环节</label>
+            <div class="flex flex-wrap gap-3 text-xs text-gray-300">
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="script"> 剧本解析</label>
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="video_prompt"> 视频提示词</label>
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="asset"> 资产生成</label>
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="review"> 审片</label>
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="compose"> 合成</label>
+            </div>
+          </div>
+          <div><label class="field-label">Skill 内容</label><textarea id="skill-edit-content" rows="18" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-xs font-mono resize-y" placeholder="写入可执行的规则、约束和输出格式…"></textarea></div>
+          <div class="flex items-center gap-2">
+            <span id="skills-editor-status" class="text-xs text-gray-500 flex-1"></span>
+            <button id="skill-copy-btn" onclick="copyCurrentSkill()" class="hidden text-xs px-3 py-2 rounded-lg glass text-cyan-200">复制为自定义</button>
+            <button id="skill-delete-btn" onclick="deleteCurrentSkill()" class="hidden text-xs px-3 py-2 rounded-lg glass text-red-300">删除</button>
+            <button id="skill-save-btn" onclick="saveCurrentSkill()" class="btn-gold text-xs px-5 py-2 rounded-lg">保存 Skill</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- 剧项目列表：一部剧一个项目，项目内再管理各集 -->
+<div id="drama-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70">
+  <div class="glass rounded-2xl p-6 w-[760px] max-w-[95vw] max-h-[86vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4">
+      <div>
+        <h3 class="font-bold text-lg" data-series-scope-title>🎞️ 剧项目</h3>
+        <p class="text-xs text-gray-500 mt-1">一部剧一个项目；项目里面再管理第1集、第2集……角色/场景/道具共享 Story Bible。</p>
+      </div>
+      <div class="flex-1"></div>
+      <button onclick="closeDramaProjects()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+    <div class="flex gap-2 mb-3">
+      <input id="drama-search" oninput="renderDramaProjectList()" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="搜索剧名…">
+      <select id="drama-filter" onchange="renderDramaProjectList()" class="bg-black/30 border border-white/10 rounded-lg px-2 py-2 text-xs">
+        <option value="all">全部</option><option value="empty">待开拍</option><option value="producing">制作中</option><option value="finished">有成片</option>
+      </select>
+      <button onclick="toggleDramaCreate()" class="btn-gold px-4 py-2 rounded-lg text-xs whitespace-nowrap">＋ 新建剧项目</button>
+    </div>
+    <div id="drama-create-box" class="hidden soft-panel rounded-xl p-3 mb-3">
+      <div class="grid md:grid-cols-2 gap-2">
+        <div><label class="field-label">剧名</label><input id="drama-create-name" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="例如：十倍返现人生"></div>
+        <div><label class="field-label">核心设定（可稍后补）</label><input id="drama-create-premise" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="一句话核心设定"></div>
+      </div>
+      <div class="flex justify-end gap-2 mt-3">
+        <button onclick="toggleDramaCreate(false)" class="px-3 py-2 rounded-lg glass text-xs">取消</button>
+        <button id="drama-create-btn" onclick="createDramaProject()" class="btn-gold px-5 py-2 rounded-lg text-xs">创建并进入项目</button>
+      </div>
+    </div>
+    <div id="drama-list" class="space-y-2 text-sm"></div>
+  </div>
+</div>
+
+<!-- 版本化重做 -->
+<div id="remake-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80">
+  <div class="glass rounded-2xl p-5 w-[520px] max-w-[94vw]" style="background:#171224;">
+    <div class="flex items-center gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-lg">🔄 版本化重做</h3>
+        <p id="remake-target-label" class="text-xs text-gray-500 mt-1">原项目会保留，新版本会继承当前配置。</p>
+      </div>
+      <div class="flex-1"></div>
+      <button onclick="closeRemakeModal()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭重做窗口">×</button>
+    </div>
+    <label class="field-label">重做起点</label>
+    <select id="remake-mode" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+      <option value="full">完整重做（重新生成剧本、资产、分镜和成片）</option>
+      <option value="script">从剧本开始（保留故事创意和生成配置）</option>
+      <option value="asset">从资产开始（保留剧本，重新生成角色和场景）</option>
+      <option value="video">从分镜视频开始（保留剧本和图片资产）</option>
+    </select>
+    <p class="text-xs text-gray-500 mt-3">原项目不会被覆盖，新版本会出现在项目列表中。</p>
+    <div class="flex items-center gap-2 mt-5">
+      <span id="remake-status" class="text-xs text-gray-500 flex-1"></span>
+      <button onclick="closeRemakeModal()" class="px-4 py-2 rounded-lg glass text-sm">取消</button>
+      <button id="remake-confirm-btn" onclick="confirmRemake()" class="btn-gold px-5 py-2 rounded-lg text-sm">创建重做版本</button>
+    </div>
+  </div>
+</div>
+
+<!-- 剧集管理工作台 -->
+<div id="episode-manager-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80">
+  <div class="glass rounded-2xl p-5 w-[1240px] max-w-[97vw] max-h-[94vh] overflow-hidden flex flex-col" style="background:#171224;">
+    <div class="flex items-center gap-3 mb-4">
+      <div>
+        <h3 class="font-bold text-lg">🗂️ 剧集管理</h3>
+        <p class="text-xs text-gray-500 mt-1">集中查看剧集制作状态、成片和队列任务，适合批量管理长剧。</p>
+      </div>
+      <div class="flex-1"></div>
+      <button id="manager-preview-mode-toggle" onclick="toggleManagerPreviewMode()" class="text-xs px-3 py-1.5 rounded glass hover:bg-white/10" title="切换剧集显示模式">▣ 内嵌预览</button>
+      <button onclick="refreshEpisodeManager()" class="text-xs px-3 py-1.5 rounded glass hover:bg-white/10">↻ 刷新</button>
+      <button onclick="closeEpisodeManager()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+    <div class="grid grid-cols-[250px_minmax(0,1fr)] gap-4 min-h-0 flex-1">
+      <aside class="soft-panel rounded-xl p-3 min-h-0 flex flex-col">
+        <div class="flex items-center gap-2 mb-2"><h4 class="font-bold text-sm">剧项目</h4><span id="manager-series-count" class="tag">0</span></div>
+        <input id="manager-series-search" oninput="renderEpisodeManagerSeries()" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs mb-2" placeholder="搜索剧名…">
+        <div id="manager-series-list" class="space-y-1 overflow-y-auto min-h-0"></div>
+      </aside>
+      <section class="min-h-0 flex flex-col">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <div>
+            <div id="manager-series-title" class="font-bold text-base">请选择一部剧</div>
+            <div id="manager-series-summary" class="text-xs text-gray-500 mt-1"></div>
+          </div>
+          <div class="flex-1"></div>
+          <input id="manager-episode-search" oninput="renderEpisodeManagerEpisodes()" class="w-36 bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs" placeholder="搜索集数/片名">
+          <select id="manager-episode-filter" onchange="renderEpisodeManagerEpisodes()" class="bg-black/30 border border-white/10 rounded-lg px-2 py-2 text-xs">
+            <option value="all">全部状态</option><option value="queued">队列中</option><option value="running">生成中</option><option value="finished">已有成片</option><option value="unfinished">未完成</option><option value="error">失败</option>
+          </select>
+          <button onclick="openJianyingExport()" class="text-xs px-3 py-2 rounded-lg glass text-cyan-200 hover:bg-cyan-400/20">✂️ 剪映草稿</button>
+          <button id="manager-merge-download" onclick="mergeSelectedManagerEpisodes()" class="text-xs px-3 py-2 rounded-lg btn-gold">⬇️ 合并下载</button>
+          <button onclick="queueSelectedManagerEpisodes()" class="text-xs px-3 py-2 rounded-lg glass hover:bg-yellow-400/20 text-yellow-200">🚀 排队选中</button>
+        </div>
+        <div class="flex items-center gap-2 mb-2 text-xs text-gray-500">
+          <label class="flex items-center gap-2 cursor-pointer"><input id="manager-select-all" type="checkbox" class="accent-yellow-500" onchange="toggleManagerSelectAll(this.checked)">全选当前列表</label>
+          <span id="manager-selected-count">已选 0 集</span>
+          <div class="flex-1"></div>
+          <button onclick="openDramaProject(MANAGER_CURRENT?.id)" class="text-yellow-300 hover:text-yellow-100">打开剧项目</button>
+        </div>
+        <div id="manager-episode-list" class="min-h-0 overflow-y-auto space-y-2 pr-1"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Windows 剪映草稿导出 -->
+<div id="jianying-export-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/80">
+  <div class="glass rounded-2xl p-6 w-[560px] max-w-[95vw] max-h-[90vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg">✂️ 下载剪映草稿</h3><button onclick="closeJianyingExport()" class="text-xl text-gray-400" aria-label="关闭">×</button></div>
+    <p id="jianying-export-summary" class="text-sm text-gray-300 mb-4"></p>
+    <label class="block text-sm mb-2" for="jianying-export-mode">时间线片段</label>
+    <select id="jianying-export-mode" onchange="updateJianyingExportMode()" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm mb-3">
+      <option value="shots">按原始镜头排列（可逐镜剪辑，所有镜头需生成完成）</option>
+      <option value="episodes">按整集成片排列（每集一段，保留成片效果）</option>
+    </select>
+    <label class="flex items-center gap-2 text-sm"><input id="jianying-export-subtitles" type="checkbox" class="accent-yellow-500">添加可编辑对白字幕</label>
+    <p class="text-xs text-gray-500 mt-1 mb-4">对白字幕按镜头时长估算时间，导入后需校对。视频原声保留。</p>
+    <div class="rounded-lg bg-black/20 p-3 text-xs text-gray-300 leading-6">适用 Windows 剪映专业版。下载 ZIP → 完整解压 → 退出剪映 → 双击 <b>import.cmd</b> → 选择剪映「全局设置」中的草稿位置 → 重新打开剪映。<br>会新建草稿并复制素材，不覆盖现有草稿。</div>
+    <p id="jianying-export-status" role="status" aria-live="polite" class="text-xs text-cyan-200 my-4">原始素材直接打包，无需转码。</p>
+    <div class="flex items-center justify-end gap-3"><a id="jianying-export-link" class="hidden text-sm text-cyan-200 underline" download>再次下载草稿包</a><button id="jianying-export-start" onclick="startJianyingExport()" class="btn-gold px-4 py-2 rounded-lg text-sm">生成并下载草稿</button></div>
+  </div>
+</div>
+<script src="/static/jianying-export.js"></script>
+
+<!-- 剧集视频预览 -->
+<div id="episode-video-preview-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/85" onclick="closeEpisodeVideoPreview(event)">
+  <div class="glass rounded-2xl p-4 w-[960px] max-w-[95vw] max-h-[92vh] overflow-hidden" style="background:#171224;" onclick="event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-3">
+      <h3 id="episode-video-preview-title" class="font-bold text-base truncate">剧集预览</h3>
+      <div class="flex-1"></div>
+      <button type="button" onclick="closeEpisodeVideoPreview()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭视频预览">×</button>
+    </div>
+    <video id="episode-video-preview" controls playsinline preload="metadata" class="w-full max-h-[78vh] rounded-xl bg-black"></video>
+  </div>
+</div>
+
+<!-- 历史项目抽屉 -->
+<div id="proj-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70">
+  <div class="glass rounded-2xl p-6 w-[480px] max-h-[80vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4"><h3 class="font-bold text-lg">📁 独立短片</h3><div class="flex-1"></div><button onclick="document.getElementById('proj-modal').classList.replace('flex','hidden')" class="text-gray-400 hover:text-white text-xl">×</button></div>
+    <div class="flex gap-2 mb-3">
+      <input id="proj-search" oninput="renderProjectList()" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm" placeholder="搜索项目名称…">
+      <select id="proj-filter" onchange="renderProjectList()" class="bg-black/30 border border-white/10 rounded-lg px-2 py-2 text-xs"><option value="all">全部</option><option value="final">已有成片</option><option value="unfinished">未完成</option></select>
+    </div>
+    <div id="proj-list" class="space-y-2 text-sm"></div>
+  </div>
+</div>
+
+<!-- 完整剧本预览 -->
+<div id="script-preview-modal" class="fixed inset-0 z-[55] hidden items-center justify-center bg-black/75" onclick="closeScriptPreview(event)">
+  <div class="glass rounded-2xl p-5 w-[820px] max-w-[94vw] max-h-[90vh] overflow-hidden flex flex-col" style="background:#171224;" onclick="event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-3">
+      <h3 id="script-preview-title" class="font-bold text-base gold truncate">完整剧本</h3>
+      <div class="flex-1"></div>
+      <button type="button" onclick="closeScriptPreview()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭完整剧本">×</button>
+    </div>
+    <pre id="script-preview-text" class="script-full-text whitespace-pre-wrap text-xs leading-6 text-gray-300 flex-1"></pre>
+    <div class="ai-edit-conversation mt-4 pt-3 border-t border-cyan-400/20">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-bold text-cyan-200">AI 修改剧本</span>
+        <span class="text-[10px] text-gray-500">例如：让开场冲突更强、增加反转、压缩第3镜对白</span>
+      </div>
+      <div id="script-chat-messages" class="script-chat-messages space-y-2 mb-2"></div>
+      <div class="flex gap-2 items-end">
+        <textarea id="script-chat-input" rows="2" class="script-chat-input flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-xs resize-y" placeholder="告诉 AI 你想怎么修改剧本…"></textarea>
+        <button id="script-chat-send" type="button" onclick="sendScriptChat()" class="px-4 py-2 rounded-lg glass hover:bg-cyan-400/20 text-cyan-200 text-xs">发送</button>
+      </div>
+      <div id="script-chat-status" class="text-[10px] text-gray-500 mt-2">修改会直接更新当前剧本；确认无误后再继续生成资产。</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 剧项目详情 / Story Bible -->
+<div id="series-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/75">
+  <div class="glass rounded-2xl p-6 w-[920px] max-w-[96vw] max-h-[92vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4">
+      <div>
+        <h3 class="font-bold text-lg">🎞️ 剧项目 <span class="tag ml-2">Story Bible</span></h3>
+        <p class="text-xs text-gray-500 mt-1">不规划整季。每一集由你自己决定剧情；系统只负责归档和跨集复用角色、场景、道具。</p>
+      </div>
+      <div class="flex-1"></div>
+      <button onclick="openRemakeModal('series',SERIES_CURRENT?.id,SERIES_CURRENT?.name)" class="text-xs px-3 py-1.5 rounded glass hover:bg-yellow-400/20 text-yellow-200">🔄 重做整部剧</button>
+      <button onclick="closeSeriesFactory();loadDramaProjects()" class="text-xs px-3 py-1.5 rounded glass hover:bg-white/10 mr-2">← 项目列表</button>
+      <button onclick="closeSeriesFactory()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+
+    <div class="soft-panel rounded-xl p-4">
+      <div class="grid md:grid-cols-[1fr_auto] gap-3 items-end">
+        <div><label class="field-label">剧名</label><input id="series-factory-name" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300" placeholder="剧名"></div>
+        <button id="series-save-btn" onclick="saveSeriesSettings()" class="px-5 py-2.5 rounded-xl glass hover:bg-yellow-400/20 text-sm">💾 保存剧名和设定</button>
+      </div>
+      <div class="mt-3"><label class="field-label">系列核心设定</label><textarea id="series-factory-premise" rows="4" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-sm resize-y" placeholder="只写这部剧长期不变的核心设定。每一集具体发生什么，由你自己在主创作框里写。"></textarea></div>
+      <div id="series-bible-summary" class="text-xs text-gray-500 mt-2"></div>
+    </div>
+
+    <div class="soft-panel rounded-xl p-4 mt-4">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label class="field-label">新建第几集</label>
+          <input id="series-new-episode" type="number" min="1" value="1" class="w-28 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <button onclick="newSeriesEpisode()" class="btn-gold px-6 py-2.5 rounded-xl text-sm">＋ 新建这一集</button>
+        <div class="flex-1"></div>
+        <span class="text-gray-600 text-xs">新建后回到主页面，你自己写本集剧情，再生成分镜。</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 mt-5 mb-3">
+      <h4 class="font-bold text-sm">📑 本剧集数</h4>
+      <span id="series-episode-count" class="tag">0集</span>
+      <div class="flex-1"></div>
+      <button onclick="queuePreparedEpisodes()" class="text-xs px-3 py-1.5 rounded glass hover:bg-yellow-400/20">🚀 已准备集数全部排队</button>
+      <button onclick="refreshCurrentSeries()" class="text-xs px-3 py-1.5 rounded glass hover:bg-white/10">↻ 刷新</button>
+    </div>
+    <div id="series-episode-list" class="grid md:grid-cols-2 gap-3"></div>
+  </div>
+</div>
+
+<!-- 故事正文与 AI 对话共用编辑弹窗 -->
+<div id="story-edit-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-4" onclick="if(event.target===this)closeStoryEdit()">
+  <div class="glass story-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="story-edit-title">
+    <div class="flex items-center gap-3 mb-3">
+      <h3 id="story-edit-title" class="font-bold text-lg">✏️ 修改故事</h3>
+      <div class="flex-1"></div>
+      <button type="button" onclick="closeStoryEdit()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭故事编辑窗口">×</button>
+    </div>
+    <div class="story-edit-layout">
+      <div class="story-edit-text-pane">
+        <label for="story-edit-text" class="text-xs text-gray-400">故事正文（可直接编辑）</label>
+        <textarea id="story-edit-text" oninput="editStoryText(this.value)" placeholder="输入故事正文，再告诉 AI 你想怎么修改…"></textarea>
+      </div>
+      <div id="story-chat-panel" data-ai-chat="story"></div>
+    </div>
+    <div class="flex items-center gap-3 mt-3">
+      <span class="text-xs text-gray-500">正文修改会同步到故事输入并自动保存草稿</span><div class="flex-1"></div>
+      <button type="button" onclick="closeStoryEdit()" class="btn-gold px-4 py-2 rounded-xl text-sm">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑确认模态框（图片/视频两用：手动模式下逐环节生成后弹出，可编辑提示词重新生成，满意后继续） -->
+<div id="edit-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-4">
+  <div class="glass rounded-2xl p-5" style="background:#171224;width:900px!important;max-width:calc(100vw - 40px)!important;height:min(820px,calc(100vh - 24px))!important;max-height:calc(100vh - 24px)!important;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:101;">
+  <link rel="stylesheet" href="/static/workspace-editor.css?v=shared-chat-20260926">
+    <div class="flex items-center mb-3">
+      <h3 id="edit-title" class="font-bold text-lg">✏️ 编辑与确认</h3>
+      <span id="edit-sub" class="tag ml-3 hidden"></span>
+      <span id="edit-msg" class="text-xs text-gray-500 ml-3 min-w-0 truncate"></span>
+      <div class="flex-1"></div>
+      <button onclick="closeEdit()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+    <div id="edit-four-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto pr-1">
+    <div id="edit-preview" class="bg-black/40 rounded-xl overflow-hidden flex items-center justify-center" style="min-height:260px;">
+      <div id="edit-preview-empty" class="text-gray-600 text-sm">等待内容…</div>
+    </div>
+    <div id="edit-prompt-box" class="min-w-0 rounded-xl border border-white/10 bg-black/20 p-3">
+    <label class="text-xs text-gray-400 block mb-1">提示词（可编辑，改后点「重新生成/重新渲染」）</label>
+    <textarea id="edit-prompt" rows="9" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs resize-y font-mono" style="min-height:160px;"></textarea>
+    </div>
+    <div id="edit-reference-images" class="rounded-xl border border-white/10 bg-black/20 p-3 hidden" style="max-height:none;overflow:auto"></div>
+    <div id="edit-chat-box" data-ai-chat="video" class="hidden"></div>
+    </div>
+    <div id="edit-video-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl bg-black/20 px-3 py-2">
+    <div id="edit-video-model-box" class="flex items-center gap-2">
+      <label class="text-xs text-gray-400 whitespace-nowrap">视频模型</label>
+      <select id="edit-video-model" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
+        <option value="">使用默认模型</option>
+      </select>
+    </div>
+    <div id="edit-video-duration-box" class="flex items-center gap-2">
+      <label class="text-xs text-gray-400 whitespace-nowrap">视频时长</label>
+      <select id="edit-video-duration" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
+        <option value="8">8 秒</option>
+        <option value="10">10 秒</option>
+        <option value="12">12 秒</option>
+        <option value="15">15 秒</option>
+      </select>
+    </div>
+    <div id="edit-image-model-box" class="flex items-center gap-2">
+      <label class="text-xs text-gray-400 whitespace-nowrap">本次图片模型</label>
+      <select id="edit-image-model" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
+        <option value="">使用默认图片模型</option>
+      </select>
+      <span class="text-[11px] text-gray-500">仅影响本次图片重生成</span>
+    </div>
+    </div>
+    <div class="flex items-center gap-2 mt-1">
+      <button id="edit-reorg" onclick="editReorganize()" class="px-4 py-2 rounded-xl text-sm glass hover:bg-white/10 transition hidden">✨ AI重写</button>
+    </div>
+  </div>
+</div>
+
+<!-- 独立图片修改悬浮窗 -->
+<div id="image-edit-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-4" onclick="closeImageEdit(event)">
+  <div class="glass rounded-2xl p-5 w-[92vw] max-w-[1000px] h-[min(94vh,900px)] overflow-hidden flex flex-col" style="background:#171224;" onclick="event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-3">
+      <h3 id="image-edit-title" class="font-bold text-lg gold">✏️ 修改图片</h3>
+      <span class="tag">图片资产</span>
+      <div class="flex-1"></div>
+      <button type="button" onclick="closeImageEdit()" class="text-gray-400 hover:text-white text-xl" aria-label="关闭图片编辑窗口">×</button>
+    </div>
+    <div id="image-edit-four-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 min-h-0 overflow-y-auto pr-1" style="grid-template-areas:'preview prompt' 'settings prompt' 'reference chat';grid-template-rows:minmax(250px,1fr) auto minmax(220px,1fr);grid-template-columns:minmax(0,1fr) minmax(0,1fr);">
+    <div id="image-edit-preview" class="bg-black/40 rounded-xl overflow-hidden flex items-center justify-center" style="grid-area:preview;min-height:220px;">
+      <div class="text-gray-600 text-sm">等待图片…</div>
+    </div>
+    <div id="image-edit-prompt-box" class="rounded-xl border border-white/10 bg-black/20 p-3 flex flex-col min-h-0" style="grid-area:prompt;">
+    <label class="text-xs text-gray-400 block mb-1">提示词（可编辑，改后点「重新生成」）</label>
+    <textarea id="image-edit-prompt" rows="9" class="flex-1 min-h-0 w-full bg-black/40 border border-white/10 rounded-lg p-3 text-xs resize-none font-mono"></textarea>
+    </div>
+    <div id="image-edit-settings" class="rounded-xl bg-black/20 px-3 py-2 flex items-center gap-2" style="grid-area:settings;">
+    <label class="text-xs text-gray-400 whitespace-nowrap">图片模型</label>
+    <select id="image-edit-model" class="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
+      <option value="">使用默认图片模型</option>
+    </select>
+    </div>
+    <div id="image-edit-reference-images" class="rounded-xl border border-white/10 bg-black/20 p-3 overflow-auto" style="grid-area:reference;">
+      <div class="text-xs font-bold text-cyan-200 mb-2">参考图</div>
+      <div id="image-edit-reference-card" class="image-edit-reference-card"></div>
+    </div>
+    <div id="image-edit-chat-box" data-ai-chat="image"></div>
+    </div>
+    <div id="image-edit-versions" class="mt-3"></div>
+    <div id="image-edit-msg" class="text-xs text-gray-500 mt-2 min-h-4"></div>
+    <div class="flex items-center gap-2 mt-3">
+      <button id="image-edit-redraw" type="button" onclick="redrawImageEdit()" class="btn-gold px-4 py-2 rounded-xl text-sm">🔄 重新生成图片</button>
+      <div class="flex-1"></div>
+      <button type="button" onclick="closeImageEdit()" class="px-4 py-2 rounded-xl text-sm glass hover:bg-white/10">稍后处理</button>
+      <button id="image-edit-confirm" type="button" onclick="confirmImageEdit()" class="px-4 py-2 rounded-xl text-sm glass hover:bg-yellow-400/20">✅ 确认图片</button>
+    </div>
+  </div>
+</div>
+
+<!-- 单镜头生成器模态框 -->
+<div id="single-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70">
+  <div class="glass rounded-2xl p-6 w-[760px] max-w-[95vw] max-h-[92vh] overflow-y-auto" style="background:#171224;">
+    <div class="flex items-center mb-4">
+      <h3 class="font-bold text-lg">🎬 单镜头生成器 <span class="text-xs text-gray-500 font-normal">MiniMax H3</span></h3>
+      <span id="single-replace-tag" class="tag ml-3 hidden"></span>
+      <div class="flex-1"></div>
+      <button onclick="closeSingle()" class="text-gray-400 hover:text-white text-xl">×</button>
+    </div>
+
+    <!-- 模式切换 -->
+    <div class="flex gap-2 mb-4" id="single-modes">
+      <button data-mode="r2v" onclick="setSingleMode('r2v')" class="single-mode-btn flex-1 py-2 rounded-xl text-sm transition">🖼️+🖼️ 参考生视频 r2v</button>
+      <button data-mode="i2v" onclick="setSingleMode('i2v')" class="single-mode-btn flex-1 py-2 rounded-xl text-sm transition">🖼️ 首帧生视频 i2v</button>
+      <button data-mode="t2v" onclick="setSingleMode('t2v')" class="single-mode-btn flex-1 py-2 rounded-xl text-sm transition">📝 文生视频 t2v</button>
+    </div>
+
+    <!-- 参考图区（固定槽位） -->
+    <div id="single-refs-box" class="mb-4">
+      <div class="flex items-center gap-3 mb-2">
+        <label class="text-xs text-gray-400">参考图 <span id="single-ref-hint" class="text-gray-600"></span></label>
+        <input id="single-file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" onchange="uploadSingleRef(this)">
+      </div>
+      <div id="single-refs" class="flex flex-wrap gap-2 items-center"></div>
+      <button id="single-add-ref" type="button" onclick="addSingleReferenceSlot()" class="hidden h-20 w-20 rounded-lg border border-dashed border-white/20 flex-col items-center justify-center text-gray-400 hover:border-yellow-400/60 hover:bg-white/5 transition" title="添加参考图"><span class="text-xl leading-none">＋</span><span class="text-[10px] mt-1">添加图片</span></button>
+    </div>
+
+    <!-- 创作要求 -->
+    <div class="mb-3">
+      <label class="text-xs text-gray-400 block mb-1">创作要求（粗略描述即可，AI会整理成H3提示词）</label>
+      <div class="flex gap-2">
+        <textarea id="single-idea" rows="2" class="flex-1 bg-black/30 border border-white/10 rounded-xl p-3 text-sm resize-none" placeholder="例如：剑客侧身闪过一拳，反手抓住对方手腕压到墙上，雨夜的霓虹灯在积水里晃动……"></textarea>
+        <button id="btn-organize" onclick="singleOrganize()" class="px-4 rounded-xl text-sm glass hover:bg-white/10 transition whitespace-nowrap">✨ AI整理</button>
+      </div>
+    </div>
+
+    <!-- H3提示词 -->
+    <div class="mb-4">
+      <label class="text-xs text-gray-400 block mb-1">H3 提示词（可直接编辑）</label>
+      <textarea id="single-prompt" rows="6" class="w-full bg-black/30 border border-white/10 rounded-xl p-3 text-sm resize-y" placeholder="点「AI整理」自动生成，或手动编写…"></textarea>
+    </div>
+
+    <!-- 时长 + 生成 -->
+    <div class="flex items-center gap-3 mb-4">
+      <label class="text-xs text-gray-400">时长</label>
+      <select id="single-duration" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <option value="8" selected>8秒</option><option value="10">10秒</option><option value="12">12秒</option><option value="15">15秒</option>
+      </select>
+      <div class="flex-1"></div>
+      <button id="btn-single-gen" onclick="singleGenerate()" class="btn-gold px-8 py-2.5 rounded-xl text-sm">🚀 生成视频</button>
+    </div>
+    <div id="single-status" class="text-xs text-gray-500 mb-3"></div>
+    <div id="single-result" class="hidden">
+      <video id="single-video" controls class="w-full rounded-xl shadow-2xl"></video>
+      <div class="flex gap-3 mt-3">
+        <a id="single-dl" href="#" download class="text-xs px-4 py-2 rounded-lg glass hover:bg-white/10 transition">⬇️ 下载视频</a>
+        <button id="single-apply" onclick="applySingleReplace()" class="text-xs px-4 py-2 rounded-lg btn-gold hidden">✅ 应用到分镜</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="/static/ai-chat.css?v=story-modal-layer-20260926">
+<script src="/static/ai-chat.js?v=story-model-20260926"></script>
+<script src="/static/workspace-main.js?v=20260926-complete-render-v29"></script>
+<script src="/static/node-manager.js"></script>
+<script src="/static/studio-shell.js?v=20260926-complete-render-v29"></script>
+</body>
+</html>

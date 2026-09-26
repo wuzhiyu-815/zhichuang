@@ -1,0 +1,6 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>映序 · 管理后台</title><link rel="stylesheet" href="/static/admin-console.css?v=1"></head><body>
+<!-- PLATFORM_BOOTSTRAP -->
+<aside><div class="brand">映序 <small>管理后台</small></div><nav aria-label="后台导航">
+<button data-page="overview">运行概览</button><button data-page="projects">连续剧管理</button><button data-page="history">独立短片管理</button><button data-page="episodes">剧集与素材管理</button><button data-page="tasks">任务队列</button><button data-page="team">用户与权限</button><button data-page="settings">服务与模型</button><button data-page="skills">公共 Skills</button><button data-page="library">小说书库</button><button data-page="usage">配额与用量</button><button data-page="audit">操作审计</button><button data-page="maintenance">备份与维护</button></nav><a href="/account/password">修改密码</a><button id="logout">退出后台</button></aside>
+<main><header><div><p>ADMINISTRATION</p><h1 id="page-title">运行概览</h1></div><div><span id="account"></span><button id="refresh">刷新</button></div></header><p id="message" role="status"></p><section id="content"></section><iframe id="workspace" title="管理功能" hidden></iframe></main>
+<script src="/static/admin-console.js?v=2"></script></body></html>

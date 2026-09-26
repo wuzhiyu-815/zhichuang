@@ -1,0 +1,165 @@
+{
+  "json": {
+    "133": {
+      "inputs": {
+        "unet_name": "qwen_image_2512_fp8_e4m3fn.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": {
+        "title": "Qwen-Image-2512 FP8"
+      }
+    },
+    "138": {
+      "inputs": {
+        "vae_name": "qwen_image_vae.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": {
+        "title": "加载VAE"
+      }
+    },
+    "140": {
+      "inputs": {
+        "text": "",
+        "clip": [
+          "149",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Positive Prompt)"
+      }
+    },
+    "141": {
+      "inputs": {
+        "filename_prefix": "Qwen-Image-2512",
+        "images": [
+          "145",
+          0
+        ]
+      },
+      "class_type": "SaveImage",
+      "_meta": {
+        "title": "保存图像"
+      }
+    },
+    "142": {
+      "inputs": {
+        "shift": 3.1,
+        "model": [
+          "133",
+          0
+        ]
+      },
+      "class_type": "ModelSamplingAuraFlow",
+      "_meta": {
+        "title": "采样算法（AuraFlow）"
+      }
+    },
+    "144": {
+      "inputs": {
+        "text": "低分辨率，低画质，肢体畸形，手指畸形，画面过饱和，蜡像感，人脸无细节，过度光滑，画面具有AI感。构图混乱。文字模糊，扭曲",
+        "clip": [
+          "149",
+          0
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Negative Prompt)"
+      }
+    },
+    "145": {
+      "inputs": {
+        "samples": [
+          "148",
+          0
+        ],
+        "vae": [
+          "138",
+          0
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE解码"
+      }
+    },
+    "148": {
+      "inputs": {
+        "seed": 655373609159919,
+        "steps": 50,
+        "cfg": 4,
+        "sampler_name": "euler",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": [
+          "142",
+          0
+        ],
+        "positive": [
+          "140",
+          0
+        ],
+        "negative": [
+          "144",
+          0
+        ],
+        "latent_image": [
+          "156",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "K采样器"
+      }
+    },
+    "149": {
+      "inputs": {
+        "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "type": "qwen_image",
+        "device": "default"
+      },
+      "class_type": "CLIPLoader",
+      "_meta": {
+        "title": "Qwen Image Text Encoder FP8"
+      }
+    },
+    "156": {
+      "inputs": {
+        "width": 1280,
+        "height": 720,
+        "batch_size": 1
+      },
+      "class_type": "EmptySD3LatentImage",
+      "_meta": {
+        "title": "空Latent图像（SD3）"
+      }
+    }
+  },
+  "map": {
+    "seed": [
+      "148",
+      "seed"
+    ],
+    "prompt": [
+      "140",
+      "text"
+    ],
+    "negative": [
+      "144",
+      "text"
+    ],
+    "width": [
+      "156",
+      "width"
+    ],
+    "height": [
+      "156",
+      "height"
+    ]
+  }
+}
