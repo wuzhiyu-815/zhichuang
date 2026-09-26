@@ -17,6 +17,8 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install -r requirements.txt
+      - name: Check all tracked Python source
+        run: python -c "import ast, pathlib, subprocess; files=subprocess.check_output(['git','ls-files','-z']).decode().split(chr(0)); [ast.parse(pathlib.Path(p).read_text(encoding='utf-8-sig'), filename=p) for p in files if p.endswith('.py')]"
       - run: python -m unittest discover -s tests -p "test_*.py" -v
       - run: node --check static/workspace-main.js
       - run: node tests/test_render_selection.js

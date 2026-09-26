@@ -6332,7 +6332,8 @@ def api_skills():
         return jsonify({"ok": False, "msg": "Skill 名称和内容不能为空"}), 400
     if len(content.encode('utf-8')) > 1024 * 1024:
         return jsonify({"ok": False, "msg": "Skill 内容不能超过 1MB"}), 400
-    filename = f"custom_{uuid.uuid4().hex[:12]}_{re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'}.md"
+    safe_name = re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
+    filename = f"custom_{uuid.uuid4().hex[:12]}_{safe_name}.md"
     with open(os.path.join(CUSTOM_SKILLS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(content)
     index = _读取技能索引()
