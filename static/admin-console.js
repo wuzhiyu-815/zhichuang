@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const names={overview:'运行概览',projects:'连续剧管理',history:'独立短片管理',episodes:'剧集与素材管理',tasks:'任务队列',team:'用户与权限',settings:'服务与模型',skills:'公共 Skills',library:'小说书库',usage:'配额与用量',audit:'操作审计',maintenance:'备份与维护'};
+  const names={overview:'运行概览',projects:'连续剧管理',history:'独立短片管理',episodes:'剧集与素材管理',tasks:'任务队列',team:'用户与权限',settings:'服务与模型',skills:'公共 Skills',library:'小说书库',usage:'配额与用量',audit:'操作审计',updates:'系统更新',maintenance:'备份与维护'};
   let current='overview',generation=0;
   const text=(tag,value,cls)=>{const node=document.createElement(tag);node.textContent=value;if(cls)node.className=cls;return node;};
   const action=(label,fn)=>{const b=text('button',label);b.onclick=fn;return b;};
@@ -9,11 +9,14 @@
   function table(headings){const wrap=text('div','','panel scroll'),table=document.createElement('table'),head=document.createElement('thead'),row=document.createElement('tr'),body=document.createElement('tbody');headings.forEach(h=>row.append(text('th',h)));head.append(row);table.append(head,body);wrap.append(table);$('content').append(wrap);return body;}
   function info(value){$('content').append(text('p',value,'muted'));}
   const bytes=value=>(value/1024**3).toFixed(2)+' GB';
-  async function show(page){const token=++generation;current=page;$('message').textContent='';$('page-title').textContent=names[page];$('content').replaceChildren();$('workspace').hidden=true;$('workspace').src='about:blank';document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.page===page?'page':'false'));
+  async function show(page){const token=++generation;current=page;history.replaceState(null,'','#'+page);$('message').textContent='';$('page-title').textContent=names[page];$('content').replaceChildren();$('workspace').hidden=true;$('workspace').src='about:blank';document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.page===page?'page':'false'));
     if(['projects','history','episodes','tasks','team','settings','skills','library'].includes(page)){$('content').hidden=true;$('workspace').hidden=false;$('workspace').src=page==='team'?'/team':'/manage/workspace?embedded=1&view='+page;return;}
     $('content').hidden=false;
     try{
-      if(page==='overview'||page==='usage'){
+      if(page==='updates'){
+        $('content').append($('system-update-template').content.cloneNode(true));
+        await window.systemUpdateRefresh();
+      }else if(page==='overview'||page==='usage'){
         const data=await api('/api/manage/overview');if(token!==generation)return;
         if(page==='overview'){
           const cards=text('div','','cards');for(const [name,value] of [['成员数',data.users.filter(r=>r.user.role==='member').length],['作品数',data.users.reduce((n,r)=>n+r.usage.projects,0)],['运行任务',data.queue.running],['待处理错误',data.queue.error]]){const card=text('div',name,'card');card.append(text('strong',value));cards.append(card);}$('content').append(cards);
@@ -36,5 +39,5 @@
   document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.page));
   $('refresh').onclick=()=>show(current);
   $('logout').onclick=async()=>{try{await api('/api/auth/logout','POST',{});location.assign('/login');}catch(e){$('message').textContent=e.message;}};
-  show('overview');
+  show(Object.hasOwn(names,location.hash.slice(1))?location.hash.slice(1):'overview');
 })();

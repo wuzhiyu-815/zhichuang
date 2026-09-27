@@ -1,6 +1,24 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>映序 · 管理后台</title><link rel="stylesheet" href="/static/admin-console.css?v=1"></head><body>
 <!-- PLATFORM_BOOTSTRAP -->
 <aside><div class="brand">映序 <small>管理后台</small></div><nav aria-label="后台导航">
-<button data-page="overview">运行概览</button><button data-page="projects">连续剧管理</button><button data-page="history">独立短片管理</button><button data-page="episodes">剧集与素材管理</button><button data-page="tasks">任务队列</button><button data-page="team">用户与权限</button><button data-page="settings">服务与模型</button><button data-page="skills">公共 Skills</button><button data-page="library">小说书库</button><button data-page="usage">配额与用量</button><button data-page="audit">操作审计</button><button data-page="maintenance">备份与维护</button></nav><a href="/account/password">修改密码</a><button id="logout">退出后台</button></aside>
+<button data-page="overview">运行概览</button><button data-page="projects">连续剧管理</button><button data-page="history">独立短片管理</button><button data-page="episodes">剧集与素材管理</button><button data-page="tasks">任务队列</button><button data-page="team">用户与权限</button><button data-page="settings">服务与模型</button><button data-page="skills">公共 Skills</button><button data-page="library">小说书库</button><button data-page="usage">配额与用量</button><button data-page="audit">操作审计</button><button data-page="updates">系统更新</button><button data-page="maintenance">备份与维护</button></nav><a href="/account/password">修改密码</a><button id="logout">退出后台</button></aside>
 <main><header><div><p>ADMINISTRATION</p><h1 id="page-title">运行概览</h1></div><div><span id="account"></span><button id="refresh">刷新</button></div></header><p id="message" role="status"></p><section id="content"></section><iframe id="workspace" title="管理功能" hidden></iframe></main>
-<script src="/static/admin-console.js?v=2"></script></body></html>
+<template id="system-update-template">
+  <section class="panel" aria-labelledby="update-heading">
+    <h2 id="update-heading">版本检查与手动更新</h2>
+    <p class="muted">检查 GitHub 上的新版本，手动更新当前服务器。更新前请结束生成任务；存在未提交的代码修改时会停止更新，保留本地修改。</p>
+    <button type="button" data-update-action onclick="systemUpdateAction('check')">检查更新</button>
+    <button type="button" class="primary" data-update-action onclick="systemUpdateAction('update')">手动更新此服务器</button>
+    <pre id="system-update-info" role="status" aria-live="polite">正在读取更新状态…</pre>
+  </section>
+  <section class="panel" aria-labelledby="push-heading">
+    <h2 id="push-heading">推送更新到 GitHub</h2>
+    <p class="muted">将当前服务器的代码修改提交并推送到当前分支。其他机器检查后手动更新；不会上传用户配置、项目素材和数据库。</p>
+    <label for="system-update-message">本次修改说明</label>
+    <input id="system-update-message" maxlength="300" placeholder="例如：修复技能管理页面" style="display:block;width:100%;margin:12px 0">
+    <button type="button" data-update-action onclick="systemUpdateAction('push')">提交并推送更新</button>
+    <p class="muted">仅管理员可操作。服务器需要安装 Git，通过 Git 克隆此项目，并已配置 GitHub 访问权限。更新完成后页面会提示自动重启结果或需要手动重启。</p>
+  </section>
+</template>
+<script src="/static/system-update.js?v=2"></script>
+<script src="/static/admin-console.js?v=3"></script></body></html>

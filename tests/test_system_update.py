@@ -4,7 +4,7 @@ import subprocess
 import tempfile
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from flask import Flask
 from infrastructure.system_update import GitUpdates, UpdateError, active_work, register_system_update, source_path
@@ -117,7 +117,12 @@ class GitUpdateTests(unittest.TestCase):
 
 class UpdateApiTests(unittest.TestCase):
     def setUp(self):
+        from flask import Response
+        from team.admin_portal import install
         self.app = Flask(__name__)
+        install(self.app)
+        self.app.add_url_rule('/static/update-script', view_func=lambda: Response(
+            Path('static/system-update.js').read_text(encoding='utf-8'), mimetype='application/javascript'))
         self.ns = {'app': self.app, 'BASE_DIR': '.', '__name__': 'test', 'SINGLE_TASKS': {}}
         register_system_update(self.ns)
         self.client = self.app.test_client()
@@ -128,6 +133,30 @@ class UpdateApiTests(unittest.TestCase):
 
     def test_remote_single_user_denied(self):
         self.assertEqual(self.client.get('/api/system-update/status', environ_base={'REMOTE_ADDR':'192.0.2.10'}).status_code, 403)
+
+    def test_team_admin_can_update_through_admin_namespace(self):
+        self.ns['MULTIUSER'] = Mock(is_admin=Mock(return_value=True))
+        response = self.client.get('/admin/api/system-update/status', environ_base={'REMOTE_ADDR': '192.0.2.10'})
+        self.assertEqual(response.status_code, 200)
+        with patch.object(GitUpdates, 'update', return_value={'message': 'done', 'restart_required': False}):
+            response = self.client.post('/admin/api/system-update/update', json={},
+                                        headers={'X-Update-Token': response.json['token']})
+            self.assertEqual(response.status_code, 200)
+            for _ in range(100):
+                task = self.client.get('/admin/api/system-update/status').json['task']
+                if task['status'] != 'running': break
+                time.sleep(.01)
+            self.assertEqual(task['status'], 'done')
+
+    def test_team_member_cannot_read_or_push_even_from_localhost(self):
+        self.ns['MULTIUSER'] = Mock(is_admin=Mock(return_value=False))
+        self.assertEqual(self.client.get('/api/system-update/status').status_code, 403)
+        self.assertEqual(self.post('push').status_code, 403)
+
+    def test_admin_script_uses_admin_api_namespace(self):
+        script = self.client.get('/admin/static/update-script').text
+        self.assertIn("fetch('/admin/api/system-update/status'", script)
+        self.assertIn("fetch('/admin/api/system-update/' + action", script)
 
     def test_csrf_required(self):
         self.assertEqual(self.client.post('/api/system-update/push').status_code, 403)
