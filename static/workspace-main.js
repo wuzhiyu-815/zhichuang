@@ -188,7 +188,7 @@ async function selectSkill(id){
   const r=await fetch(`/api/skills/${encodeURIComponent(id)}`),d=await r.json();
   if(!r.ok||!d.ok){alert(d.msg||'读取 Skill 失败');return;}
   const s=d.skill;$('skills-empty').classList.add('hidden');$('skills-editor').classList.remove('hidden');
-  $('skills-editor-kind').textContent=s.builtin?'内置 · 只读':'自定义';
+  $('skills-editor-kind').textContent=s.builtin?'内置 · 内容只读':'自定义';
   $('skills-editor-id').textContent=s.id;
   $('skill-edit-name').value=s.name||'';$('skill-edit-description').value=s.description||'';$('skill-edit-content').value=s.content||'';
   document.querySelectorAll('.skill-stage-check').forEach(c=>c.checked=(s.stages||[]).includes(c.value));
@@ -196,7 +196,9 @@ async function selectSkill(id){
   ['skill-edit-name','skill-edit-description','skill-edit-content'].forEach(id=>$(id).readOnly=readonly);
   document.querySelectorAll('.skill-stage-check').forEach(c=>c.disabled=readonly);
   $('skill-copy-btn').classList.toggle('hidden',!readonly);
-  $('skill-save-btn').classList.toggle('hidden',readonly);$('skill-delete-btn').classList.toggle('hidden',readonly);
+  $('skill-save-btn').classList.toggle('hidden',readonly);
+  $('skill-delete-btn').classList.toggle('hidden',!(s.can_delete ?? !readonly));
+  $('skills-editor-status').textContent=readonly&&s.can_delete?'管理员可删除此公共技能，删除后对所有成员生效。':'';
 }
 function newSkillForm(){
   CURRENT_SKILL_ID='';SKILL_NEW=true;renderSkillsList();$('skills-empty').classList.add('hidden');$('skills-editor').classList.remove('hidden');
@@ -231,8 +233,11 @@ async function saveCurrentSkill(){
   $('skills-editor-status').textContent='已保存';
 }
 async function deleteCurrentSkill(){
-  if(!CURRENT_SKILL_ID||!confirm('确定删除当前自定义 Skill？'))return;
-  const r=await fetch(`/api/skills/${encodeURIComponent(CURRENT_SKILL_ID)}`,{method:'DELETE'}),d=await r.json();
+  if(!CURRENT_SKILL_ID)return;
+  const skill=SKILLS.find(x=>x.id===CURRENT_SKILL_ID);
+  const message=skill?.builtin?'确定删除此内置 Skill？所有成员将无法再选择或加载它；源文件保留，更新不会自动恢复。':'确定删除当前自定义 Skill？';
+  if(!confirm(message))return;
+  const r=await fetch(`/api/skills/${encodeURIComponent(CURRENT_SKILL_ID)}`,{method:'DELETE'}),d=await r.json().catch(()=>({}));
   if(!r.ok||!d.ok){alert(d.msg||'删除 Skill 失败');return;}
   CURRENT_SKILL_ID='';$('skills-editor').classList.add('hidden');$('skills-empty').classList.remove('hidden');await loadSkills();
 }

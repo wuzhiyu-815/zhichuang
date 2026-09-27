@@ -219,6 +219,8 @@ CONFIG = load_config()
 
 def 读取二次元打戏技能():
     """读取整理后的二次元打戏规则，详细原稿只作为按需参考。"""
+    if _技能已删除('builtin:anime-action'):
+        return ""
     try:
         with open(COMBAT_SKILL_PATH, 'r', encoding='utf-8-sig') as f:
             return f.read()
@@ -236,6 +238,8 @@ def 获取二次元打戏规则(_context=None, 参数=None):
 
 def 读取武戏技能():
     """读取整理后的 MiniMax H3 武戏规则，完整模板仅按需参考。"""
+    if _技能已删除('builtin:minimax-action'):
+        return ""
     try:
         with open(ACTION_SKILL_PATH, 'r', encoding='utf-8-sig') as f:
             return f.read()
@@ -249,6 +253,8 @@ def 获取武戏提示词规则(_context=None, 参数=None):
 
 def 读取文戏技能():
     """读取整理后的 MiniMax H3 文戏规则，完整模板仅按需参考。"""
+    if _技能已删除('builtin:minimax-dialogue'):
+        return ""
     try:
         with open(DIALOGUE_SKILL_PATH, 'r', encoding='utf-8-sig') as f:
             return f.read()
@@ -373,8 +379,14 @@ def _保存技能索引(data):
     with open(SKILLS_INDEX_PATH, 'w', encoding='utf-8') as f:
         json.dump(data if isinstance(data, dict) else {}, f, ensure_ascii=False, indent=2)
 
+def _技能已删除(skill_id):
+    return str(skill_id or '') in (_读取技能索引().get('__deleted_builtins__') or {})
+
+
 def _技能内容(skill_id):
     sid = str(skill_id or '').strip()
+    if _技能已删除(sid):
+        return ""
     if sid in 内置技能定义:
         path = 内置技能定义[sid]["path"]
     elif sid.startswith('custom:'):
@@ -391,12 +403,15 @@ def _技能内容(skill_id):
 
 def skills_catalog(include_content=False):
     catalog = []
+    index = _读取技能索引()
+    deleted = index.get('__deleted_builtins__') or {}
     for item in 内置技能定义.values():
+        if item['id'] in deleted:
+            continue
         entry = copy.deepcopy(item)
         if include_content:
             entry["content"] = _技能内容(entry["id"])
         catalog.append(entry)
-    index = _读取技能索引()
     known = set()
     for filename in sorted(os.listdir(CUSTOM_SKILLS_DIR)):
         if filename == 'index.json' or not filename.lower().endswith(('.md', '.txt')):
@@ -459,25 +474,30 @@ def 是否文戏场景(text):
 def 获取提示词技能模式(text=''):
     """返回当前项目的提示词技能路由；显式选择优先于自动识别。"""
     selected = str(runtime_config().get('video_skill_id') or 'auto').strip()
+    if _技能已删除(selected):
+        return 'none'
     selected_map = {
         "builtin:minimax-dialogue": "dialogue",
         "builtin:minimax-action": "action",
         "builtin:anime-action": "anime_action",
     }
+    def available(mode):
+        sid = next((key for key, value in selected_map.items() if value == mode), '')
+        return 'none' if _技能已删除(sid) else mode
     if selected in selected_map:
         return selected_map[selected]
     if _阶段技能(selected, 'video_prompt'):
         return selected
     mode = str(runtime_config().get('prompt_skill_mode', 'auto') or 'auto').strip().lower()
     if mode in ('dialogue', 'action', 'anime_action', 'none'):
-        return mode
+        return available(mode)
     if mode.startswith('custom:') and 读取自定义技能(mode):
         return mode
     text = str(text or '')
     if 是否打戏场景(text):
-        return 'anime_action' if re.search(r'二次元|动漫|日漫|国漫|动画|漫画', text) else 'action'
+        return available('anime_action' if re.search(r'二次元|动漫|日漫|国漫|动画|漫画', text) else 'action')
     if 是否文戏场景(text):
-        return 'dialogue'
+        return available('dialogue')
     return 'none'
 
 def 构造提示词技能规则(shot):
@@ -6507,14 +6527,25 @@ def api_skills_import():
 
 @app.route('/api/skills/<path:skill_id>', methods=['GET', 'PUT', 'DELETE'])
 def api_skill_detail(skill_id):
-    """查询、编辑或删除单个 Skill；内置 Skill 只读。"""
+    """内置内容只读；团队管理员可持久移除内置 Skill。"""
     sid = str(skill_id or '')
     item = next((x for x in skills_catalog() if x["id"] == sid), None)
     if not item:
         return jsonify({"ok": False, "msg": "Skill 不存在"}), 404
     if request.method == 'GET':
+        item['can_delete'] = (not item.get('builtin')) or bool(MULTIUSER and MULTIUSER.is_admin())
         item["content"] = (_阶段技能(sid, item['stages'][0]) if item.get('agent_skill') else _技能内容(sid))
         return jsonify({"ok": True, "skill": item})
+    if request.method == 'DELETE' and MULTIUSER and not MULTIUSER.is_admin():
+        return jsonify(ok=False, msg='仅管理员可删除公共 Skill'), 403
+    if item.get('builtin') and request.method == 'DELETE':
+        if not MULTIUSER or not MULTIUSER.is_admin():
+            return jsonify(ok=False, msg='仅团队管理员可删除内置 Skill'), 403
+        with CONFIG_IO_LOCK:
+            index = _读取技能索引()
+            index.setdefault('__deleted_builtins__', {})[sid] = {'deleted_at': time.time()}
+            _保存技能索引(index)
+        return jsonify(ok=True, skills=skills_catalog(), msg='已从公共技能中删除，后续不再加载此技能')
     if item.get("builtin"):
         return jsonify({"ok": False, "msg": "内置 Skill 只读，请复制后新建自定义 Skill"}), 403
     filename = os.path.basename(sid[7:] if sid.startswith('custom:') else sid)

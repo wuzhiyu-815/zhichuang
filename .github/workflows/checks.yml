@@ -23,3 +23,4 @@ jobs:
       - run: node --check static/workspace-main.js
       - run: node tests/test_render_selection.js
       - run: node tests/test_system_update_ui.js
+      - run: node tests/test_skill_deletion_ui.js
