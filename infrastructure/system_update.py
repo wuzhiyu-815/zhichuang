@@ -24,10 +24,17 @@ ROOT_FILES = {
     'push_updates.bat', 'update.bat', 'push_updates.sh', 'update.sh',
 }
 SOURCE_DIRS = {'.github', 'agents', 'core', 'infrastructure', 'skills', 'static', 'team', 'tests', 'workflows', 'docs'}
-SECRET_PATTERN = re.compile(rb'(?:sk-|ghp_|gho_|github_pat_|AKIA)[A-Za-z0-9_-]{16,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----')
+SECRET_PATTERN = re.compile(rb'(?<![A-Za-z0-9_])(?:sk-|ghp_|gho_|github_pat_|AKIA)[A-Za-z0-9_-]{16,}|-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----')
+WINDOWS_BUNDLE_FILES = {
+    'vendor/windows-x64/python.zip', 'vendor/windows-x64/ffmpeg.zip',
+    'vendor/windows-x64/ffprobe.zip', 'vendor/windows-x64/manifest.json',
+    'vendor/windows-x64/README.md', 'vendor/windows-x64/requirements-lock.txt',
+}
 
 
 def source_path(name):
+    if name in WINDOWS_BUNDLE_FILES:
+        return True
     p = PurePosixPath(name)
     if p.is_absolute() or '..' in p.parts or '\\' in name:
         return False

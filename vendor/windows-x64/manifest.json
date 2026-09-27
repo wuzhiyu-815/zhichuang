@@ -1,0 +1,25 @@
+{
+  "platform": "windows-x64",
+  "python": "Python 3.13.12",
+  "ffmpeg": "ffmpeg version 2025-06-08-git-5fea5e3e11-full_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers",
+  "python_source": "https://www.python.org/ftp/python/3.13.12/python-3.13.12-embed-amd64.zip",
+  "ffmpeg_source": "https://github.com/FFmpeg/FFmpeg/commit/5fea5e3e11",
+  "requirements_sha256": "245d390b005cdd6bf757f55506fe2780b2b5bb4fc82fead4f18303a484189c0e",
+  "packages": [
+    {
+      "file": "python.zip",
+      "sha256": "56bfe7662020e17e143598a9a4736cf885627d1017a7957eb087747a7fb091cf",
+      "bytes": 38141150
+    },
+    {
+      "file": "ffmpeg.zip",
+      "sha256": "d9ef5792289d1e859da758db97787170912acb8f74571cb4afb2e37f7f225a3f",
+      "bytes": 62746294
+    },
+    {
+      "file": "ffprobe.zip",
+      "sha256": "30f6e49abc325f78472023fe26c2143e4c688bf555a8fae1b11b3e829d43acbe",
+      "bytes": 62638465
+    }
+  ]
+}

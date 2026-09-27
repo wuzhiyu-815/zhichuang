@@ -7,7 +7,23 @@ import unittest
 from unittest.mock import patch
 
 from flask import Flask
-from infrastructure.system_update import GitUpdates, UpdateError, active_work, register_system_update
+from infrastructure.system_update import GitUpdates, UpdateError, active_work, register_system_update, source_path
+
+
+class WindowsBundlePathTests(unittest.TestCase):
+    def test_css_mask_names_are_not_api_keys(self):
+        service = GitUpdates('.')
+        service.inspect_blob('static/tailwindcss.js', b'"mask-box-image-outset", "mask-box-image-repeat"', [])
+        with self.assertRaises(UpdateError):
+            service.inspect_blob('app.py', b'KEY="sk-' + b'a' * 32 + b'"', [])
+
+    def test_only_named_runtime_packages_are_allowed(self):
+        for name in ('python.zip', 'ffmpeg.zip', 'ffprobe.zip', 'manifest.json', 'README.md', 'requirements-lock.txt'):
+            self.assertTrue(source_path('vendor/windows-x64/' + name))
+        for name in ('vendor/windows-x64/private.zip', 'vendor/windows-x64/../python.zip',
+                     'vendor/windows-x64/config.json', 'vendor/windows-x64/python.exe',
+                     'outputs/python.zip', 'runtime/windows/python.exe', '.venv/python.exe'):
+            self.assertFalse(source_path(name))
 
 
 class GitUpdateTests(unittest.TestCase):

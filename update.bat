@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 set "PYTHONUTF8=1"
-".venv\Scripts\python.exe" -m infrastructure.system_update update %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0infrastructure\windows_runtime.ps1" update %*
 set "result=%errorlevel%"
 pause
 exit /b %result%

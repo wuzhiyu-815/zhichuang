@@ -48,6 +48,12 @@ venv/
 *.exe
 *.dll
 *.zip
+!/vendor/
+!/vendor/windows-x64/
+!/vendor/windows-x64/*.zip
+!/vendor/windows-x64/*.json
+!/vendor/windows-x64/*.txt
+!/vendor/windows-x64/*.md
 *.tar*
 /skills/custom/
 /infrastructure/runtime/

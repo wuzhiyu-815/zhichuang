@@ -6,7 +6,8 @@
 
 ## 环境
 
-- Python 3.11 或 3.12；FFmpeg 与 ffprobe 放入系统 PATH。
+- Windows 64 位：仓库已带 Python 3.13.12、项目依赖、FFmpeg 和 ffprobe。
+- Ubuntu：Python 3.11 或 3.12；FFmpeg 与 ffprobe 放入系统 PATH。
 - 可连接的 LLM API，以及具有相应节点、模型的 ComfyUI 服务。
 - GPU 模型和第三方下载器不随仓库分发。工作流 JSON 不包含模型权重。
 
@@ -15,11 +16,12 @@
 ```powershell
 git clone https://github.com/wuzhiyu-815/zhichuang.git
 cd zhichuang
-Copy-Item config.example.json config.json
 .\start_windows.bat
 ```
 
-已有 `config.json` 时不要重复复制。启动脚本创建虚拟环境并安装依赖。浏览器访问 `http://127.0.0.1:7860`，在设置中填入自己的服务地址与密钥。团队模式使用 `start_team.bat`。
+也可以下载仓库 ZIP，解压后双击 `start_windows.bat`。启动器会校验并解压自带环境，不需要另外安装 Python、FFmpeg 或首次联网安装依赖；已有 `config.json` 会保留，缺失时才从示例创建。浏览器访问 `http://127.0.0.1:7860`，在设置中填入自己的服务地址与密钥。团队模式使用 `start_team.bat`。Git 同步功能需要单独安装 Git 并使用克隆目录。
+
+运行环境详情和许可证见 [Windows 运行包](vendor/windows-x64/README.md)。环境检查：`powershell -NoProfile -ExecutionPolicy Bypass -File infrastructure/windows_runtime.ps1 check`。
 
 ## Ubuntu 首次安装
 
@@ -48,10 +50,10 @@ node tests/test_render_selection.js
 
 Node.js 仅用于 JavaScript 检查。测试不替代真实 LLM、ComfyUI 与视频合成的端到端验证。
 
-Windows 开发建议使用 `dev` 分支，验证后合入 `main`，Ubuntu 部署经过验证的提交或标签。具体流程见 [部署与回滚](docs/DEPLOYMENT.md)。
+个人开发统一使用 `main` 分支，修改并验证后推送；Ubuntu 拉取 `main`。具体流程见 [部署与回滚](docs/DEPLOYMENT.md)。
 
 ## 配置和数据
 
-Git 仅管理源代码、内置技能、工作流和文档。`config.json`、`.venv`、`projects`、`assets`、`outputs`、`series`、`reviews`、`runtime`、`novel_downloads`、数据库和运行队列均保留在各自机器。
+Git 管理源代码、内置技能、工作流、文档及 `vendor/windows-x64` 中的 Windows 运行包。`config.json`、`.venv`、`projects`、`assets`、`outputs`、`series`、`reviews`、`runtime`、`novel_downloads`、数据库和运行队列均保留在各自机器。
 
 新增根目录源码文件需要相应更新 `.gitignore` 的白名单。提交前检查 `git diff --cached`；不要使用 `git add -f` 上传运行数据。

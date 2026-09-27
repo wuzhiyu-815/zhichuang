@@ -6,7 +6,7 @@
 
 1. 确认原程序绝对路径、启动用户、单机/团队模式、端口和服务管理方式。
 2. 在旁边新建独立 Git 克隆目录。比对两侧源码；原导出包的 `BUILD-MANIFEST.json` 可在本地作为历史校验参考，但不是完整原始源码或 Git 历史。
-3. 把 Ubuntu 独有修改合并到开发分支，测试通过后合入 main。
+3. 比对并保留 Ubuntu 独有修改，测试通过后提交到 main。
 4. 使用独立测试数据、测试端口和新建的 Linux 虚拟环境做验证。不要让测试实例和正式实例同时写同一套数据库或项目文件，也不要复制正式运行队列启动测试服务。
 5. 等所有渲染任务结束，停止原服务，备份代码、配置和业务数据，再迁移到已验证的 Git 目录。保留原目录作为回滚备份。
 6. 配置原有服务管理器指向新目录，沿用正确的端口和团队模式；验证后再开放访问。
@@ -16,15 +16,17 @@
 ## 日常开发
 
 ```bash
-git switch dev
+git switch main
 # 修改、测试
 git add <本次修改的代码文件>
 git diff --cached
 git commit -m "说明本次修改"
-git push origin dev
+git push origin main
 ```
 
-测试后通过 Pull Request 合入 main，必要时标记稳定版本。私有仓库可使用 Git Credential Manager 或 SSH 认证；不要在代码或远程 URL 中嵌入令牌。
+个人开发统一使用 main，测试后推送，必要时标记稳定版本。私有仓库可使用 Git Credential Manager 或 SSH 认证；不要在代码或远程 URL 中嵌入令牌。
+
+Windows 已包含运行环境，下载后运行 `start_windows.bat`。旧版应用的更新检查不认识新增的运行包目录，升级到本版本时请停止应用，在终端执行 `git pull --ff-only origin main` 后重新启动。后续即可继续使用新版更新入口。Windows 运行包变化后应关闭程序并重新双击启动，以载入新环境；Ubuntu 忽略该运行包并沿用 Linux 虚拟环境。
 
 ## 后续 Ubuntu 更新
 
