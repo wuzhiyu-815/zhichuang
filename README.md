@@ -21,7 +21,7 @@ cd zhichuang
 
 也可以下载仓库 ZIP，解压后双击 `start_windows.bat`。启动器会校验并解压自带环境，不需要另外安装 Python、FFmpeg 或首次联网安装依赖；已有 `config.json` 会保留，缺失时才从示例创建。浏览器访问 `http://127.0.0.1:7860`，在设置中填入自己的服务地址与密钥。团队模式使用 `start_team.bat`。Git 同步功能需要单独安装 Git 并使用克隆目录。
 
-运行环境详情和许可证见 [Windows 运行包](vendor/windows-x64/README.md)。环境检查：`powershell -NoProfile -ExecutionPolicy Bypass -File infrastructure/windows_runtime.ps1 check`。
+Python 和 FFmpeg 解压在项目根目录的 `python/` 和 `ffmpeg/` 文件夹中。运行环境详情和许可证见 [Windows 运行包](vendor/windows-x64/README.md)。环境检查：`powershell -NoProfile -ExecutionPolicy Bypass -File infrastructure/windows_runtime.ps1 check`。
 
 ## Ubuntu 首次安装
 

@@ -13,26 +13,34 @@ try {
     $manifestPath = Join-Path $bundle 'manifest.json'
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     $version = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLower().Substring(0, 16)
-    $runtime = Join-Path $root "runtime\windows\$version"
+    $runtime = $root
     $python = Join-Path $runtime 'python\python.exe'
     $ffmpeg = Join-Path $runtime 'ffmpeg\ffmpeg.exe'
     $ffprobe = Join-Path $runtime 'ffmpeg\ffprobe.exe'
-    $ready = Join-Path $runtime '.ready'
-    if (-not ((Test-Path -LiteralPath $ready) -and (Test-Path -LiteralPath $python) -and
+    $ready = Join-Path $root 'python\.bundle-version'
+    $installedVersion = ''
+    if (Test-Path -LiteralPath $ready) { $installedVersion = (Get-Content -LiteralPath $ready -Raw).Trim() }
+    if (-not (($installedVersion -eq $version) -and (Test-Path -LiteralPath $python) -and
               (Test-Path -LiteralPath $ffmpeg) -and (Test-Path -LiteralPath $ffprobe))) {
-        Write-Host 'Preparing bundled Python and FFmpeg (first launch only)...'
-        New-Item -ItemType Directory -Force -Path $runtime | Out-Null
+        Write-Host 'Preparing python and ffmpeg folders in the project directory...'
+        $running = Get-CimInstance Win32_Process -Filter "Name='python.exe' OR Name='pythonw.exe'" |
+            Where-Object { $_.ExecutablePath -and ((Split-Path -Parent $_.ExecutablePath) -eq (Split-Path -Parent $python)) }
+        if ($running) { throw 'Close this project application before updating its bundled runtime.' }
+        # Verify every archive before overwriting an existing runtime.
         foreach ($package in $manifest.packages) {
             if ($package.file -notmatch '^[a-z0-9-]+\.zip$') { throw 'Invalid runtime package name.' }
             $archive = Join-Path $bundle $package.file
             if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $package.sha256) {
                 throw "Runtime checksum mismatch: $($package.file). Download the repository again."
             }
-            Expand-Archive -LiteralPath $archive -DestinationPath $runtime -Force
+        }
+        foreach ($package in $manifest.packages) {
+            Expand-Archive -LiteralPath (Join-Path $bundle $package.file) -DestinationPath $runtime -Force
         }
         if (-not ((Test-Path -LiteralPath $python) -and (Test-Path -LiteralPath $ffmpeg) -and
                   (Test-Path -LiteralPath $ffprobe))) { throw 'Incomplete Windows runtime.' }
         Set-Content -LiteralPath $ready -Value $version -Encoding ASCII
+        Set-Content -LiteralPath (Join-Path $root 'python\.requirements-sha256') -Value $manifest.requirements_sha256 -Encoding ASCII
     }
     $env:PYTHONUTF8 = '1'
     $env:PYTHONIOENCODING = 'utf-8'
@@ -45,7 +53,7 @@ try {
         $hasher = [Security.Cryptography.SHA256]::Create()
         $requirements = ([BitConverter]::ToString($hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes($requirementsText)))).Replace('-', '')
         $hasher.Dispose()
-        $installedPath = Join-Path $runtime '.requirements-sha256'
+        $installedPath = Join-Path $root 'python\.requirements-sha256'
         $installed = $manifest.requirements_sha256
         if (Test-Path -LiteralPath $installedPath) { $installed = (Get-Content -LiteralPath $installedPath -Raw).Trim() }
         if ($requirements -ne $installed) {

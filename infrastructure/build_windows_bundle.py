@@ -31,10 +31,10 @@ def main():
     if len(pth_files) != 1 or not (python / 'LICENSE.txt').is_file():
         raise SystemExit('Expected an official Windows embeddable Python distribution.')
     pth = pth_files[0]
-    # Installed location: <project>/runtime/windows/<manifest hash>/python.
+    # Installed location: <project>/python.
     # Use Windows separators: embedded getpath handles forward-slash '..' paths
     # differently. No 'import site': keep personal/user packages out of this bundle.
-    pth.write_text(f'{pth.stem}.zip\n.\nLib\\site-packages\n..\\..\\..\\..\n', encoding='utf-8')
+    pth.write_text(f'{pth.stem}.zip\n.\nLib\\site-packages\n..\n', encoding='utf-8')
     packages = []
 
     def archive(name, entries):

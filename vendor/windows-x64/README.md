@@ -2,8 +2,11 @@
 
 此目录随 Git 仓库提供 Windows 64 位 Python、已安装的 Python 依赖、FFmpeg 与 ffprobe。
 双击项目根目录的 `start_windows.bat` 即可启动，无需预先安装 Python 或 FFmpeg。
-首次运行由 Windows PowerShell 校验 SHA-256 并解压至 `runtime/windows/<版本>/`。
+首次运行由 Windows PowerShell 校验 SHA-256 并解压至项目根目录的 `python/` 和 `ffmpeg/`。
 后续启动复用已解压的环境，不会每次执行联网安装。
+
+目录示例：`C:\zhichuang\python\python.exe`、`C:\zhichuang\ffmpeg\ffmpeg.exe`。
+旧版的 `runtime/windows/<版本>/` 不再使用；更新后首次启动会从随包压缩文件重新解压到根目录。
 
 压缩包分别小于 GitHub 的 100 MiB 单文件限制。下载 GitHub ZIP 也包含完整环境；
 应用内 Git 同步仍要求通过 Git 克隆项目，并单独安装 Git 和配置仓库访问权限。
@@ -33,5 +36,5 @@ python infrastructure/build_windows_bundle.py --python-dir <嵌入包目录> --f
 ```
 
 脚本只打包指定的干净目录，不复制个人虚拟环境。重建后检查清单、校验值和运行测试。
-依赖清单后续变化时，启动器会安装新依赖，需要网络；更换运行包则使用新的版本目录。
-运行包更新后关闭程序并重新双击启动，以选用新环境。
+依赖清单后续变化时，启动器会安装新依赖，需要网络。
+运行包更新后先关闭程序，再重新双击启动，启动器会更新根目录内的运行环境。

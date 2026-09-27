@@ -8,8 +8,8 @@
   "packages": [
     {
       "file": "python.zip",
-      "sha256": "56bfe7662020e17e143598a9a4736cf885627d1017a7957eb087747a7fb091cf",
-      "bytes": 38141150
+      "sha256": "fafbf26fba4d81a1140df1c1c468aa1115b4c08ddff690e946f15a77f1ce595b",
+      "bytes": 38141146
     },
     {
       "file": "ffmpeg.zip",
