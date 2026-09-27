@@ -163,8 +163,17 @@ class 渲染执行器:
             if now >= next_poll:
                 next_poll = now + interval
                 history, error = self.comfy_client.历史(prompt_id)
+                # Transport failure does not establish failure of the submitted job.
+                if error and history is None:
+                    emit(max_percent, "连接暂时中断，正在查询原任务", estimated=True, force=True)
+                    next_poll = time.time() + max(interval, 5)
+                    continue
                 if history is not None:
                     status = history.get("status", {})
+                    if status.get("status_str") == "error":
+                        error = "ComfyUI执行错误: " + json.dumps(status.get("messages", []), ensure_ascii=False)[:300]
+                        self._monitor("finish", False, error)
+                        return None, error
                     if status.get("completed"):
                         elapsed = max(0, int(time.time() - start))
                         if progress_callback:
@@ -200,4 +209,3 @@ class 渲染执行器:
         error = f"ComfyUI生成超时({timeout}秒)"
         self._monitor("finish", False, error)
         return None, error
-

@@ -30,6 +30,12 @@ cut可用于换场、时间跳转、空镜、插入镜头，以及同场景可�
 
 RULES = '\n'.join(line for line in LEGACY_RULES.splitlines() if not line.startswith('transition为'))
 RULES += '\ntransition为opening/continuous/cut；首镜opening，后续不允许opening。必须额外返回handoff_mode字符串。\n' + HANDOFF_RULES
+PLAN_FIELDS = ('action', 'transition', 'reason', 'camera_mode', 'handoff_mode',
+               'start_location', 'start_characters', 'start_props',
+               'end_location', 'end_characters', 'end_props')
+RULES += (f'\n必须返回全部{len(PLAN_FIELDS)}个字段：' + ','.join(PLAN_FIELDS)
+          + '。opening和cut的三个start字段必须是非空字符串；只有continuous允许start为空。'
+          '空镜也必须明确填写人物状态为“无人入镜”，不可省略characters字段或返回数组/null。')
 
 
 def enabled(project):
@@ -98,6 +104,27 @@ def _decode_flat_plan(result, index):
     return {'index': index, 'action': result['action'], 'continuity': plan}
 
 
+def _repair_start(engine, result, context):
+    """Repair only missing independent opening state, without changing events."""
+    if not isinstance(result, dict) or result.get('transition', '').strip().lower() not in ('opening', 'cut'):
+        return result
+    fields = ('start_location', 'start_characters', 'start_props')
+    missing = [key for key in fields if not isinstance(result.get(key), str) or not result[key].strip()]
+    if not missing:
+        return result
+    text, _ = engine.llm_chat([
+        {'role': 'system', 'content': '只修复当前镜头缺失的开场状态。依据原镜头场景、动作和前镜状态，返回JSON，仅含start_location、start_characters、start_props三个非空字符串。位置用明确空间地标，人物写本名、站位和姿态，道具写位置和持有者。无人时写无人入镜，无道具时描述已有环境物件。开场必须在本镜动作发生之前，不得复制结尾状态，不得改变剧情或把cut改为continuous，不编造无依据的新地点或物品。'},
+        {'role': 'user', 'content': json.dumps({'context': context, 'plan': result, 'missing': missing}, ensure_ascii=False)},
+    ], max_tokens=1200, temperature=.1, timeout=240, response_format={'type': 'json_object'})
+    patch = engine.parse_json_from_text(text or '')
+    repaired = copy.deepcopy(result)
+    if isinstance(patch, dict):
+        for key in missing:
+            if isinstance(patch.get(key), str) and patch[key].strip():
+                repaired[key] = patch[key].strip()
+    return repaired
+
+
 def plan_script(engine, script, cached_signature=None):
     if cached_signature == source_signature(script) and not validate_continuity(script.get('shots', [])):
         return script
@@ -112,15 +139,20 @@ def plan_script(engine, script, cached_signature=None):
         context['shots'] = original
         context['previous_shot'] = planned['shots'][offset - 1] if offset else None
         errors = ''
-        for _ in range(2):
-            text, error = engine.llm_chat([
-                {'role': 'system', 'content': RULES},
-                {'role': 'user', 'content': json.dumps(context, ensure_ascii=False) + '\n校验错误：' + errors
-                 + f'\n只规划当前第{original[0]["index"]}镜；返回规定的11个扁平字符串字段（含handoff_mode），不返回shots数组。'},
-            ], max_tokens=4000, temperature=.1, timeout=600, response_format={'type': 'json_object'})
+        messages = [
+            {'role': 'system', 'content': RULES},
+            {'role': 'user', 'content': json.dumps(context, ensure_ascii=False)
+             + f'\n只规划当前第{original[0]["index"]}镜；返回以下{len(PLAN_FIELDS)}个扁平字符串字段：'
+             + ','.join(PLAN_FIELDS) + '。不返回shots数组。'},
+        ]
+        for attempt in range(2):
+            text, error = engine.llm_chat(copy.deepcopy(messages), max_tokens=4000, temperature=.1,
+                                          timeout=600, response_format={'type': 'json_object'})
             try:
                 result = engine.parse_json_from_text(text or '')
                 if isinstance(result, dict) and 'shots' not in result:
+                    if attempt == 1:
+                        result = _repair_start(engine, result, context)
                     result = {'shots': [_decode_flat_plan(result, original[0]['index'])]}
                 if not isinstance(result, dict) or not isinstance(result.get('shots'), list):
                     raise ValueError(error or '模型未返回完整有效的连续性JSON')
@@ -148,6 +180,12 @@ def plan_script(engine, script, cached_signature=None):
                 break
             except (ValueError, KeyError, TypeError, AttributeError) as exc:
                 errors = str(exc) or error or '连续性计划无效'
+                if text:
+                    messages.append({'role': 'assistant', 'content': text})
+                messages.append({'role': 'user', 'content': '校验错误：' + errors
+                    + '\n请修复上次结果，检查并补齐全部字段，返回完整JSON，不只返回修正字段。'
+                    'opening/cut必须明确描述开场人物位置、姿势、持物等状态；'
+                    '无人入镜时明确写“无人入镜”。不得用结束状态代替开始状态。'})
         else:
             raise ValueError(f'镜头交接规划失败（第{original[0]["index"]}镜起）：' + errors)
     return planned

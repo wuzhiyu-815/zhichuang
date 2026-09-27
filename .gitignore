@@ -14,6 +14,10 @@
 !/start_team.bat
 !/debug_windows.bat
 !/start_ubuntu.sh
+!/push_updates.bat
+!/update.bat
+!/push_updates.sh
+!/update.sh
 !/agents/
 !/core/
 !/infrastructure/

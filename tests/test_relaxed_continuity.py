@@ -30,6 +30,37 @@ def shots():
 
 
 class RelaxedContinuityTests(unittest.TestCase):
+    def test_missing_opening_characters_is_repaired_with_previous_response(self):
+        good = {'action': '甲推门进入', 'transition': 'opening', 'reason': '首镜',
+                'camera_mode': 'changed', 'handoff_mode': 'none',
+                'start_location': '门外', 'start_characters': '甲站在门外，双手自然下垂',
+                'start_props': '门关闭', 'end_location': '门内',
+                'end_characters': '甲站在门内，右手扶门', 'end_props': '门打开'}
+        bad = dict(good)
+        bad.pop('start_characters')
+        bad_text = json.dumps(bad, ensure_ascii=False)
+        engine = SimpleNamespace(llm_chat=Mock(side_effect=[
+            (bad_text, None), (json.dumps(good), None)]), parse_json_from_text=json.loads)
+        script = {'shots': [{'index': 1, 'action': '甲推门进入', 'dialogue': []}]}
+        result = plan_script(engine, script)
+        self.assertEqual(validate_continuity(result['shots']), [])
+        self.assertEqual(result['shots'][0]['continuity']['start']['characters'], good['start_characters'])
+        self.assertNotIn('continuity', script['shots'][0])
+        first = engine.llm_chat.call_args_list[0].args[0]
+        retry = engine.llm_chat.call_args_list[1].args[0]
+        self.assertIn('11个扁平字符串字段', first[1]['content'])
+        self.assertEqual(retry[-2], {'role': 'assistant', 'content': bad_text})
+        self.assertIn('start_characters', retry[-1]['content'])
+
+    def test_missing_opening_state_still_fails_after_retry(self):
+        engine = SimpleNamespace(llm_chat=Mock(return_value=('{}', None)),
+                                 parse_json_from_text=json.loads)
+        script = {'shots': [{'index': 1, 'action': '开场'}]}
+        with self.assertRaisesRegex(ValueError, '镜头交接规划失败'):
+            plan_script(engine, script)
+        self.assertEqual(engine.llm_chat.call_count, 2)
+        self.assertNotIn('continuity', script['shots'][0])
+
     def test_parallel_state_shots_and_ordered_frame_successor(self):
         sequence = []
         lock = threading.Lock()

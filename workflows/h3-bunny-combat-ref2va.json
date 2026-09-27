@@ -1,0 +1,468 @@
+{
+  "92": {
+    "inputs": {
+      "filename_prefix": "video/MiniMax_H3",
+      "format": "mp4",
+      "format.codec": "h264",
+      "format.codec.encoding": "auto",
+      "codec": "auto",
+      "video-preview": "",
+      "video": [
+        "130",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "保存视频"
+    }
+  },
+  "119": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAE"
+    }
+  },
+  "120": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "VAE"
+    }
+  },
+  "121": {
+    "inputs": {
+      "samples": [
+        "159",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "122": {
+    "inputs": {
+      "samples": [
+        "159",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "123": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "124": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1,
+      "model": [
+        "151",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "125": {
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "158",
+        0
+      ],
+      "latent_image": [
+        "136",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "BUNNY 一采：武打动作结构"
+    }
+  },
+  "126": {
+    "inputs": {
+      "model": [
+        "151",
+        0
+      ],
+      "conditioning": [
+        "136",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "127": {
+    "inputs": {
+      "unet_name": "minimax_h3_hybrid_fl2va_ref2va_b25-49.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Hybrid H3 UNet"
+    }
+  },
+  "128": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "CLIP"
+    }
+  },
+  "129": {
+    "inputs": {
+      "noise_seed": 516430109499183
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "130": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "122",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "创建视频"
+    }
+  },
+  "131": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "132": {
+    "inputs": {
+      "value": 12
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "视频时长（秒）"
+    }
+  },
+  "136": {
+    "inputs": {
+      "prompt": [
+        "138",
+        0
+      ],
+      "width": [
+        "148",
+        0
+      ],
+      "height": [
+        "148",
+        1
+      ],
+      "length": [
+        "131",
+        1
+      ],
+      "ref_image_size": "match",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio_vae": [
+        "120",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "137",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "152",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "162",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 参考转视频"
+    }
+  },
+  "137": {
+    "inputs": {
+      "image": "pasted/image (1).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "138": {
+    "inputs": {
+      "value": "integrated_multimodal_description: 【参考图风格与色调】画风：三维渲染的写实数字插画，人物造型比例理想化，机械与人体融合，背景虚化，整体呈电影感科幻视觉。；色调：主色为黑与暗红，辅以冷蓝与青白。冷暖对比强烈，高饱和霓虹色点缀，明暗对比高。；光影：硬光为主，边缘光勾勒轮廓，暗部深重。冷蓝环境光与红暖光交织，高光锐利，调色偏冷峻。；材质：表面光滑，漆皮与金属反光明显，机械部件有硬边光泽，皮肤细腻，背景有湿润反光与颗粒感。。将以上特征写入视觉描述，人物、场景、道具及视频首尾保持统一。参考图画风优先于项目默认画风及旧画风要求；明暗与光源适配剧情昼夜，保留整体配色关系。不得因此修改人物身份、服装设定、动作、逐字对白或参考图编号；不复制原图构图、文字、水印或界面。\n三维渲染写实数字插画，电影感科幻视觉，主色黑与暗红，冷蓝环境光与橙红火光交织，硬光勾勒轮廓，表面漆皮与金属反光锐利，雨夜十字路口装甲车残骸区，地面大面积积水倒映红蓝霓虹与高楼轮廓，远处高架桥横跨深紫红天空，雨丝斜线可见。人物与声线设定，仅用于身份和声音绑定，不朗读：<Subject 1> (S1) 为零，女性义体战士，银白高马尾湿贴脸颊，浅蓝紫瞳孔，身穿黑红配色露腰紧身战斗服，右臂红黑装甲完整无熔痕，机械腿表面有积水，手戴黑色手套，全身湿透，固定声线为冷冽低沉的年轻女声，参照 <Picture 1>；<Subject 2> 为八名持刀义体兵，统一灰黑战术护甲与金属面罩，各持一把合金刀，参照 <Picture 1>；<Subject 3> 为十字路口装甲车残骸区场景，参照 <Picture 2>；<Subject 4> 为合金刀，黑柄银刃带齿背，参照 <Picture 3>。本镜无对白，不朗读任何人物设定与说话人编号，无旁白。零的脸、银白高马尾、黑红露腰战斗服只属于它自己，义体兵的脸与灰黑护甲只属于它们自己，两方外观不混合、不互换。开场即运动：零右拳握拳前伸，身体前倾，随即收拳转身。\n\n实际衔接参考（不朗读）：<Picture 4>为上一镜实际末帧，只约束空间、起始姿态、持物和动作进度；角色身份、衣着、道具外观仍由原有参考图锁定，不以末帧替换它们。继承已完成动作，不重演转身或放物；遮挡或未入帧的物品按状态表和道具参考保留。允许指定的新机位，保持世界位置与视线关系，不把画面左右当成真实换位。\n\n[Shot 1] At 00:00.000, the camera arcs right around 零 in a medium-wide shot as she pulls her right fist back from its forward extension, her right arm armor intact and unmarked, and eight blade-armed cyborg soldiers burst out of both alley mouths and close in from left and right, boots slamming through ankle-deep water. The camera arcs with her turn, rain streaking diagonally through the neon glare, the burning wreck and red cable bundle behind her matching the visible frame.\n\n[Shot 2] At 00:02.600, the camera cuts hard to a low tracking shot as 零 pivots on her mechanical leg and drives a spinning kick into the first soldier's chest plate, the impact folding him backward into the flooded road with a flat splash; she keeps rotating without stopping, and her right forearm armor splits open and a black-red blade snaps out.\n\n[Shot 3] At 00:05.000, the camera cuts to a tight side-on shot: the black-red blade sweeps a rising diagonal and shears through two alloy blades at once, both snapped halves spinning away into the water; she immediately reverses the elbow and slams it into a third soldier's faceplate, cracking the mask apart, glass and metal fragments scattering. Water sprays up around every footfall.\n\n[Shot 4] At 00:07.400, the camera cuts to a close over-shoulder shot as a fourth soldier locks both arms around 零 from behind; she snaps her head and upper body straight back, crushing his nose with the back of her skull, then drops her hips and sweeps her mechanical leg in a flat arc that sends two more soldiers skidding across the flooded asphalt into a spray of water. The camera tracks the leg sweep and stays low.\n\n[Shot 5] At 00:10.200, the camera pulls out into a wide arc as 零 retracts the black-red blade back into her forearm armor with a metallic click, rises out of the low sweep and turns on her heel, left fist clenched, silver high ponytail plastered to her cheek, pale blue-violet eyes sweeping the remaining ring of soldiers; the last one stands frozen with his blade half raised, orange fire and black smoke rolling off the wrecked armored car behind her, rain still falling. The camera settles on her scanning turn and holds on the burning wreck and the ring of standing attackers as the frame ends.\n\noverall_soundscape: 雨夜十字路口的持续雨声与积水被踩踏的溅水声，装甲车残骸燃烧的噼啪火声与低鸣，八人急促逼近的湿重脚步，合金刀出鞘与劈断时的尖锐金属撞击与断裂脆响，肘击面罩的碎裂声，后仰撞鼻的闷响，机械腿横扫带起的大片水浪声，以及零湿透战斗服与装甲关节的摩擦与液压轻响。\n\nnon_diegetic_music: 低沉电子合成器铺底，配以短促的工业打击节奏，速度中快，力度随每次接触逐步抬升，在机械腿横扫处达到最强，随后收束为一条冷冽的持续低音，不加重锤开场鼓点。"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Input Text (Prompt)"
+    }
+  },
+  "147": {
+    "inputs": {
+      "lora_name": "minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors",
+      "strength_model": 0.7,
+      "model": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA"
+    }
+  },
+  "148": {
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 0.4,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "分辨率选择器"
+    }
+  },
+  "149": {
+    "inputs": {
+      "sage_attention": "auto",
+      "allow_compile": false,
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "150": {
+    "inputs": {
+      "model": [
+        "149",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+    "_meta": {
+      "title": "MiniMax H3 Mem Eff Sage Attention Patch"
+    }
+  },
+  "151": {
+    "inputs": {
+      "lora_name": "MiniMax_H3_Combat_LoRA.safetensors",
+      "strength_model": 1,
+      "model": [
+        "147",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA"
+    }
+  },
+  "152": {
+    "inputs": {
+      "image": "pasted/image (2).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "154": {
+    "inputs": {
+      "steps": 3,
+      "start_at_sigma": 0.65,
+      "end_at_sigma": 0.28,
+      "spacing": "sine",
+      "sigmas": [
+        "124",
+        0
+      ]
+    },
+    "class_type": "ExtendIntermediateSigmas",
+    "_meta": {
+      "title": "BUNNY 动作 Sigma 扩展"
+    }
+  },
+  "155": {
+    "inputs": {
+      "lora_name": "minimax_h3_fl2v_lightx2v_turbo_4step_v0.1_comfy.safetensors",
+      "strength_model": 0.2,
+      "model": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "BUNNY 二采模型：Turbo 0.20"
+    }
+  },
+  "156": {
+    "inputs": {
+      "lora_name": "MiniMax_H3_Combat_LoRA.safetensors",
+      "strength_model": 0.65,
+      "model": [
+        "155",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "BUNNY 二采模型：Combat 0.65"
+    }
+  },
+  "157": {
+    "inputs": {
+      "model": [
+        "156",
+        0
+      ],
+      "conditioning": [
+        "136",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "BUNNY 二采低强度引导"
+    }
+  },
+  "158": {
+    "inputs": {
+      "denoise": 0.25,
+      "sigmas": [
+        "154",
+        0
+      ]
+    },
+    "class_type": "SplitSigmasDenoise",
+    "_meta": {
+      "title": "BUNNY 二采切分：末段 25%"
+    }
+  },
+  "159": {
+    "inputs": {
+      "noise": [
+        "160",
+        0
+      ],
+      "guider": [
+        "157",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "158",
+        1
+      ],
+      "latent_image": [
+        "125",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "BUNNY 二采：清噪与细节收敛"
+    }
+  },
+  "160": {
+    "inputs": {},
+    "class_type": "DisableNoise",
+    "_meta": {
+      "title": "BUNNY 二采：禁止重复加噪"
+    }
+  },
+  "162": {
+    "inputs": {
+      "image": "pasted/image (3).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  }
+}

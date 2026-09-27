@@ -134,9 +134,19 @@ function getStyleValue(){
   return $('style').value;
 }
 let SKILLS=[], CURRENT_SKILL_ID='', SKILL_NEW=false;
-const SKILL_STAGE_LABELS={script:'剧本解析',video_prompt:'视频提示词',asset:'资产生成',review:'审片',compose:'合成'};
+const SKILL_STAGE_LABELS={story:'故事创作与改稿',script:'剧本解析',video_prompt:'视频提示词',asset:'资产生成',review:'审片',compose:'合成（旧标签，未接入）'};
 function skillName(id){return id==='auto'?'自动识别':id==='none'?'基础 H3':(SKILLS.find(x=>x.id===id)?.name||id);}
+function stageSkillValues(){return Object.fromEntries(['story','asset','review'].map(stage=>[stage+'_skill_id',$(stage+'-skill-mode')?.value||'auto']));}
+function restoreStageSkills(cfg){for(const stage of ['story','asset','review']){const el=$(stage+'-skill-mode');if(el){el.dataset.selected=cfg[stage+'_skill_id']||'auto';}}}
 function renderSkillSelectors(videoId,scriptId){
+  for(const stage of ['story','asset','review']){
+    const el=$(stage+'-skill-mode');if(!el)continue;
+    const selected=el.dataset.selected||el.value||'auto';delete el.dataset.selected;
+    el.replaceChildren(new Option(stage==='story'?'默认故事创作与改稿':'默认规则','auto'),new Option('不使用附加技能','none'));
+    SKILLS.filter(x=>(x.stages||[]).includes(stage)).forEach(x=>el.appendChild(new Option(x.name,x.id)));
+    el.value=selected;if(el.selectedIndex<0)el.value='auto';
+  }
+
   const video=$('prompt-skill-mode'),script=$('script-skill-mode');
   videoId=videoId||video?.value||'auto';scriptId=scriptId||script?.value||'auto';
   if(video){
@@ -145,7 +155,7 @@ function renderSkillSelectors(videoId,scriptId){
     video.value=videoId||video.value||'auto';if(![...video.options].some(o=>o.value===video.value))video.value='auto';
   }
   if(script){
-    script.replaceChildren(new Option('自动解析','auto'));
+    script.replaceChildren(new Option('默认叙事技能','auto'),new Option('不使用附加技能','none'));
     SKILLS.filter(x=>(x.stages||[]).includes('script')).forEach(x=>script.appendChild(new Option(x.name,x.id)));
     script.value=scriptId||script.value||'auto';if(![...script.options].some(o=>o.value===script.value))script.value='auto';
   }
@@ -165,8 +175,9 @@ function chooseCustomSkill(id){if(id){$('prompt-skill-mode').value=id;queueDraft
 function renderSkillsList(){
   const box=$('skills-list');if(!box)return;
   const query=($('skills-search')?.value||'').trim().toLowerCase();
-  const list=SKILLS.filter(x=>!query||`${x.name} ${x.description} ${(x.stages||[]).map(s=>SKILL_STAGE_LABELS[s]).join(' ')}`.toLowerCase().includes(query));
-  $('skills-count').textContent=String(SKILLS.length);
+  const stage=$('skills-stage-filter')?.value||'';
+  const list=SKILLS.filter(x=>(!stage||(x.stages||[]).includes(stage))).filter(x=>!query||`${x.name} ${x.description} ${(x.stages||[]).map(s=>SKILL_STAGE_LABELS[s]).join(' ')}`.toLowerCase().includes(query));
+  $('skills-count').textContent=`${list.length} / ${SKILLS.length}`;
   box.innerHTML=list.map(x=>`<button type="button" class="w-full text-left rounded-lg p-2.5 ${CURRENT_SKILL_ID===x.id?'bg-cyan-400/15 border-cyan-400/40':'bg-black/20 border-white/10'} border hover:border-cyan-400/40" onclick="selectSkill('${escapeHtml(x.id)}')">
     <div class="flex items-center gap-2"><span class="text-xs font-bold truncate">${escapeHtml(x.name)}</span><span class="tag ml-auto">${x.builtin?'内置':'自定义'}</span></div>
     <div class="text-[10px] text-gray-500 mt-1 truncate">${escapeHtml((x.stages||[]).map(s=>SKILL_STAGE_LABELS[s]||s).join(' · ')||'未绑定环节')}</div>
@@ -227,19 +238,23 @@ async function deleteCurrentSkill(){
 }
 async function importSkillFile(input){
   const file=input?.files?.[0];if(!file)return;
-  const fd=new FormData();fd.append('file',file);
+  const fd=new FormData();fd.append('file',file);fd.append('stages',$('skills-stage-filter')?.value||'video_prompt');
   const r=await fetch('/api/skills/import',{method:'POST',body:fd}),d=await r.json().catch(()=>({}));
   if(!r.ok||!d.ok){alert(d.msg||'导入 Skill 失败');input.value='';return;}
-  await loadSkills(d.skill.id,d.skill.stages?.includes('video_prompt')?d.skill.id:$('prompt-skill-mode')?.value);
+  await loadSkills();
   await selectSkill(d.skill.id);input.value='';
 }
 function openSkillsManager(){loadSkills($('prompt-skill-mode')?.value,$('script-skill-mode')?.value);$('skills-modal').classList.replace('hidden','flex');}
+function exportCurrentSkill(){
+  const blob=new Blob([$('skill-edit-content').value],{type:'text/markdown;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=($('skill-edit-name').value||'skill')+'.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function closeSkillsManager(){$('skills-modal').classList.replace('flex','hidden');}
 
 // ---------- V2 导演台 / 本地草稿 / 使用体验 ----------
 const DRAFT_KEY='garen_shortdrama_v2_draft'+(window.PLATFORM?.user?':'+PLATFORM.user.id:'');
 const LAST_VIEW_KEY='garen_shortdrama_v2_last_view'+(window.PLATFORM?.user?':'+PLATFORM.user.id:'');
-function directorIds(){return ['director-platform','director-length','director-genre','director-pace','prompt-skill-mode','script-skill-mode','director-hook','director-reversal','director-ending','director-dialogue','director-payoff','director-consistency','series-mode','series-name','episode-no','prev-summary'];}
+function directorIds(){return ['h3-workflow-id','director-platform','director-length','director-genre','director-pace','prompt-skill-mode','script-skill-mode','story-skill-mode','asset-skill-mode','review-skill-mode','director-hook','director-reversal','director-ending','director-dialogue','director-payoff','director-consistency','series-mode','series-name','episode-no','prev-summary'];}
 function directorSignature(){
   const values={idea:normalizeStoryText($('idea')?.value).trim(),style:getStyleValue(),shotDuration:$('shotDuration')?.value,shotCount:$('shotCount')?.value,resolution:$('resolution')?.value};
   directorIds().forEach(id=>{const el=$(id);values[id]=el?.type==='checkbox'?!!el.checked:(el?.value||'');});
@@ -283,6 +298,7 @@ function hydrateDirectorFromIdea(text){
 function hydrateDirectorFromProject(project){
   const matched=hydrateDirectorFromIdea(project?.idea||'');
   const cfg=project?.render_config||{};
+  $('h3-workflow-id').value=cfg.h3_workflow_id||'h3-dasiwa-8step';
   if(cfg.style){
     if([...$('style').options].some(o=>o.value===cfg.style||o.text===cfg.style))$('style').value=cfg.style;
     else {$('style').value='__custom__';$('styleCustom').value=cfg.style;}
@@ -292,6 +308,7 @@ function hydrateDirectorFromProject(project){
   if(cfg.shot_count!==undefined)$('shotCount').value=String(cfg.shot_count);
   if(cfg.prompt_skill_mode!==undefined)$('prompt-skill-mode').value=String(cfg.video_skill_id||cfg.prompt_skill_mode);
   if($('script-skill-mode'))$('script-skill-mode').value=String(cfg.script_skill_id||'auto');
+  restoreStageSkills(cfg);
   loadSkills(String(cfg.video_skill_id||cfg.prompt_skill_mode||'auto'),String(cfg.script_skill_id||'auto'));
   if(cfg.aspect_ratio)setResolutionUI(cfg.aspect_ratio,Number(cfg.megapixels)||0.4);
   updateDirectorPreview();
@@ -465,7 +482,7 @@ async function sendStoryChat(){
   storyChatBusy=true;$('story-chat-send').disabled=true;input.disabled=true;
   state.history.push({role:'user',content:message});renderStoryChat();status.textContent='AI 正在修改故事…';
   try{
-    const response=await fetch('/api/story/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea:story,message,history,model:$('story-chat-model')?.value||''})});
+    const response=await fetch('/api/story/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea:story,message,history,skill_id:$('story-skill-mode')?.value||'auto',model:$('story-chat-model')?.value||''})});
     const result=await response.json();
     if(!response.ok||!result.ok)throw new Error(result.msg||'AI 修改失败');
     if(typeof result.story!=='string'||!result.story.trim())throw new Error('AI 没有返回故事正文');
@@ -954,7 +971,7 @@ function runPipeline(continuePid,overrideIdea){
   const steps=Math.max(4,Math.min(25,parseInt($('h3Steps').value)||8));$('h3Steps').value=steps;
   const skillMode=$('prompt-skill-mode')?.value||'auto';
   const scriptSkill=$('script-skill-mode')?.value||'auto';
-  const url=`/api/pipeline/run?style=${encodeURIComponent(style)}&shot_duration=${dur}&shot_count=${cnt}&skill_mode=${encodeURIComponent(skillMode)}&script_skill=${encodeURIComponent(scriptSkill)}&subtitle=${$('subtitleEnabled').checked?1:0}&aspect_ratio=${encodeURIComponent(asp)}&megapixels=${mp}&h3_steps=${steps}&custom_assets=${$('customAssets').checked?1:0}&manual=${$('manualMode').checked?1:0}&prompt_batch=${$('promptBatchMode').checked?1:0}&script_review=1${!continuePid&&generationReference?.id?`&asset_reference_id=${encodeURIComponent(generationReference.id)}`:''}${continuePid?`&pid=${continuePid}`:''}`;
+  const url=`/api/pipeline/run?style=${encodeURIComponent(style)}&shot_duration=${dur}&shot_count=${cnt}&skill_mode=${encodeURIComponent(skillMode)}&script_skill=${encodeURIComponent(scriptSkill)}&${new URLSearchParams(Object.fromEntries(Object.entries(stageSkillValues()).map(([k,v])=>[k.replace('_id',''),v])))}&subtitle=${$('subtitleEnabled').checked?1:0}&aspect_ratio=${encodeURIComponent(asp)}&megapixels=${mp}&h3_steps=${steps}&h3_workflow_id=${encodeURIComponent($('h3-workflow-id').value)}&custom_assets=${$('customAssets').checked?1:0}&manual=${$('manualMode').checked?1:0}&prompt_batch=${$('promptBatchMode').checked?1:0}&script_review=1${!continuePid&&generationReference?.id?`&asset_reference_id=${encodeURIComponent(generationReference.id)}`:''}${continuePid?`&pid=${continuePid}`:''}`;
   window._sseFinished=false;
   window._sseReconnectLogged=false;
   es=new PipelineStream(url,{idea,full_script_import:fullScript?'1':''});
@@ -1047,9 +1064,11 @@ function buildFullScriptText(s){
 }
 function openScriptPreview(){
   renderScriptChat();
+  loadScriptChatModels();
   $('script-preview-modal')?.classList.replace('hidden','flex');
   setTimeout(()=>$('script-chat-input')?.focus(),0);
 }
+async function loadScriptChatModels(){const s=$('script-chat-model');if(!s)return;try{const d=await fetchAvailableLLMModels();s.replaceChildren(new Option(d.current?`使用当前 LLM（${d.current}）`:'使用当前 LLM',''),...(d.models||[]).filter(Boolean).map(m=>new Option(m,m)));}catch(_){s.replaceChildren(new Option('使用当前 LLM',''));}}
 function closeScriptPreview(event){
   if(event&&event.target&&event.target.id!=='script-preview-modal')return;
   $('script-preview-modal')?.classList.replace('flex','hidden');
@@ -1075,7 +1094,7 @@ async function sendScriptChat(){
   try{
     const response=await fetch(`/api/project/${encodeURIComponent(currentPid)}/script/chat`,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({message:text,history:scriptChatHistory.slice(0,-1)})
+      body:JSON.stringify({skill_id:$('script-skill-mode')?.value||'auto',message:text,history:scriptChatHistory.slice(0,-1),model:$('script-chat-model')?.value||''})
     });
     const result=await response.json().catch(()=>({}));
     if(!response.ok||!result.ok)throw new Error(result.msg||result.error||'AI修改失败');
@@ -1632,6 +1651,7 @@ function updateShotCardIfPresent(idx,url){
 }
 function openAssetEdit(key,url,prompt){
   editMode='asset';editKeyRef=key;closeEdit();
+  $('edit-video-workflow-box').classList.add('hidden');
   $('edit-title').textContent='✏️ 修改图片 · '+key.replace(/^(char|scene|prop)_/,'');
   $('edit-sub').textContent='图片资产';$('edit-sub').classList.remove('hidden');
   $('edit-redraw').textContent='🔄 用此提示词重新生成';$('edit-redraw').disabled=false;
@@ -1778,10 +1798,20 @@ async function loadEditChatModels(){const s=$('edit-chat-model');if(!s)return;tr
 async function loadEditVideoModels(){
   const select=$('edit-video-model');
   if(!select)return;
+  const workflow=$('edit-video-workflow'), box=$('edit-video-workflow-box');
+  workflow.replaceChildren(new Option('沿用项目工作流',''));box.classList.add('hidden');
+  const pid=currentPid, index=editKeyRef;
   select.replaceChildren(new Option('正在获取官方视频模型…',''));
   try{
-    const cfg=await(await fetch('/api/config')).json();
+    const project=await(await fetch(`/api/project/${encodeURIComponent(pid)}`)).json();
+    const globalCfg=await(await fetch('/api/config')).json();
+    if(currentPid!==pid||editKeyRef!==index||editMode!=='shot')return;
+    const cfg={...globalCfg,...(project.project?.render_config||{})};
     if(cfg.media_provider!=='jimeng'){
+      const data=await(await fetch('/api/comfy/workflows')).json();
+      if(currentPid!==pid||editKeyRef!==index||editMode!=='shot')return;
+      workflow.replaceChildren(new Option('沿用项目工作流',''),...(data.workflows||[]).map(x=>new Option(x.name,x.id)));
+      box.classList.remove('hidden');
       select.replaceChildren(new Option('当前使用 ComfyUI',''));
       return;
     }
@@ -1854,7 +1884,7 @@ async function editRedraw(){
       editMsg(`已使用${r.provider==='jimeng'?'即梦 API':'ComfyUI'}重新生成，请检查这张参考图。`);
     }else{
       editMsg('正在重新渲染该镜（约几分钟）…');
-      const r=await(await fetch(`/api/project/${rerenderPid}/shot/${rerenderIndex}/rerender`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,video_model:$('edit-video-model')?.value||'',duration:Number($('edit-video-duration')?.value||8)})})).json();
+      const r=await(await fetch(`/api/project/${rerenderPid}/shot/${rerenderIndex}/rerender`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,h3_workflow_id:$('edit-video-workflow-box').classList.contains('hidden')?'':$('edit-video-workflow').value,video_model:$('edit-video-model')?.value||'',duration:Number($('edit-video-duration')?.value||8)})})).json();
       if(r.error){editMsg('❌ '+r.error);return;}
 
       const vid=$('edit-preview video');if(vid)vid.parentNode.innerHTML='<div class="text-gray-500 text-sm">重渲染进行中，完成后自动刷新…</div>';
@@ -2846,7 +2876,7 @@ async function saveSettings(){
       story_bible_enabled:$('cfg-story-bible').checked,auto_review:$('cfg-auto-review').checked,
       review_threshold:Math.max(40,Math.min(95,parseInt($('cfg-review-threshold').value)||72)),max_auto_rerenders:parseInt($('cfg-review-rerenders').value)||0,
       shot_duration:$('shotDuration').value,shot_count:$('shotCount').value,
-      subtitle_enabled:$('subtitleEnabled')?.checked||false,video_skill_id:$('prompt-skill-mode')?.value||'auto',script_skill_id:$('script-skill-mode')?.value||'auto'};
+      subtitle_enabled:$('subtitleEnabled')?.checked||false,video_skill_id:$('prompt-skill-mode')?.value||'auto',script_skill_id:$('script-skill-mode')?.value||'auto',...stageSkillValues(),h3_workflow_id:$('h3-workflow-id')?.value||'h3-dasiwa-8step'};
     if(window.PLATFORM?.user?.role==='member'){delete body.comfyui_servers;delete body.comfyui_url;}
     $('h3Steps').value=$('cfg-steps').value;  // 设置里的步数同步到主面板
     const response=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -2884,9 +2914,11 @@ async function initPanel(){
     if($('script-skill-mode'))$('script-skill-mode').value=String(c.script_skill_id||'auto');
     setResolutionUI(c.aspect_ratio||'16:9 (Widescreen)', c.megapixels??0.4);
     $('h3Steps').value=c.h3_steps??8;
+    $('h3-workflow-id').value=c.h3_workflow_id||'h3-dasiwa-8step';
     if(c.manual_mode!==undefined)$('manualMode').checked=!!c.manual_mode;
     if(c.subtitle_enabled!==undefined)$('subtitleEnabled').checked=!!c.subtitle_enabled;
     $('promptBatchMode').checked=true;
+    restoreStageSkills(c);
     renderSkillSelectors(String(c.video_skill_id||c.prompt_skill_mode||'auto'),String(c.script_skill_id||'auto'));
   }catch(e){}
   applyCreationDefaults();
@@ -3794,7 +3826,7 @@ async function syncMainConfig(){
   try{
     const [asp,mp]=$('resolution').value.split('|');
     await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({aspect_ratio:asp,megapixels:parseFloat(mp),h3_steps:parseInt($('h3Steps').value)||8,prompt_skill_mode:$('prompt-skill-mode')?.value||'auto',video_skill_id:$('prompt-skill-mode')?.value||'auto',script_skill_id:$('script-skill-mode')?.value||'auto',subtitle_enabled:$('subtitleEnabled')?.checked||false})});
+      body:JSON.stringify({aspect_ratio:asp,megapixels:parseFloat(mp),h3_steps:parseInt($('h3Steps').value)||8,prompt_skill_mode:$('prompt-skill-mode')?.value||'auto',video_skill_id:$('prompt-skill-mode')?.value||'auto',script_skill_id:$('script-skill-mode')?.value||'auto',...stageSkillValues(),h3_workflow_id:$('h3-workflow-id')?.value||'h3-dasiwa-8step',subtitle_enabled:$('subtitleEnabled')?.checked||false})});
   }catch(e){}
 }
 $('resolution').addEventListener('change',syncMainConfig);

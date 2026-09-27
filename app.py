@@ -110,10 +110,14 @@ DEFAULT_CONFIG = {
     "shot_count": "auto",                     # auto=LLM按故事节奏定 | 用户指定镜头数
     "prompt_skill_mode": "auto",              # auto=自动识别 | dialogue=文戏 | action=武戏 | anime_action=二次元武戏 | none=基础H3
     "video_skill_id": "auto",                 # 统一 Skill 注册中心中的视频提示词 Skill
+    "story_skill_id": "auto",
+    "asset_skill_id": "auto",
+    "review_skill_id": "auto",
     "script_skill_id": "auto",                # 统一 Skill 注册中心中的剧本解析 Skill
     "subtitle_enabled": False,                # 合成时将剧本对白烧录到最终视频
     "shot_rules_version": 2,                  # 分镜时长/镜头数规则版本，旧项目载入时自动迁移
-    "h3_steps": 8,                            # Dasiwa H3 8步工作流默认采样步数
+    "h3_steps": 8,
+    "h3_workflow_id": "h3-dasiwa-8step",                            # Dasiwa H3 8步工作流默认采样步数
     "exclusive_mode": False,                  # 互斥模式：本地LLM与ComfyUI不同时运行（低显存友好）
     "llm_profiles": [],
     "active_llm_profile_id": "",
@@ -145,7 +149,7 @@ def normalize_config(cfg):
     prompt_mode = str(cfg.get('prompt_skill_mode') or 'auto')
     if prompt_mode not in ('auto', 'dialogue', 'action', 'anime_action', 'none') and not prompt_mode.startswith('custom:'):
         cfg['prompt_skill_mode'] = 'auto'
-    for key in ('video_skill_id', 'script_skill_id'):
+    for key in ('video_skill_id', 'script_skill_id', 'story_skill_id', 'asset_skill_id', 'review_skill_id'):
         cfg[key] = str(cfg.get(key) or 'auto')
     if cfg['video_skill_id'] == 'auto' and prompt_mode.startswith('custom:'):
         cfg['video_skill_id'] = cfg['prompt_skill_mode']
@@ -282,6 +286,19 @@ def 自定义技能列表():
     return result
 
 内置技能定义 = {
+    "builtin:qwen21-asset": {
+        "id": "builtin:qwen21-asset", "name": "Qwen Image 2.1 资产提示词",
+        "description": "人物半身正面及正侧背三视图，按类型适配空场景和道具；仅编写提示词。",
+        "filename": "skills/qwen21-asset-prompt/SKILL.md",
+        "path": os.path.join(BASE_DIR, "skills", "qwen21-asset-prompt", "SKILL.md"),
+        "stages": ["asset"], "builtin": True,
+    },
+    "builtin:story-writing": {
+        "id": "builtin:story-writing", "name": "故事创作与改稿", "description": "人物动机、因果、冲突、反转与结局，支持故事和剧本。",
+        "filename": "agents/script/skills/story-writing/SKILL.md",
+        "path": os.path.join(BASE_DIR, "agents", "script", "skills", "story-writing", "SKILL.md"),
+        "agent_skill": "story-writing", "stages": ["story", "script"], "builtin": True,
+    },
     "builtin:krea2-image": {
         "id": "builtin:krea2-image", "name": "Krea 2 图片提示词", "description": "旧版 Krea 2 提示词规则存档；当前资产生成使用 Qwen Image 2.1。",
         "filename": "skills/krea2-image-prompt/SKILL.md", "path": str(KREA_SKILL_PATH),
@@ -366,7 +383,7 @@ def _技能内容(skill_id):
         return ""
     try:
         with open(path, 'r', encoding='utf-8-sig') as f:
-            return f.read()[:20000]
+            return f.read()
     except Exception:
         return ""
 
@@ -408,8 +425,19 @@ def _阶段技能(skill_id, stage):
         return ""
     if item.get("agent_skill"):
         from skills.agent_documents import load_agent_skill
-        return load_agent_skill(BASE_DIR, item["agent_skill"], stage)
+        return load_agent_skill(BASE_DIR, item["agent_skill"], "script" if stage == "story" else stage)
     return _技能内容(sid)
+
+def selected_stage_skill(stage, skill_id=None, config=None):
+    cfg = runtime_config() if config is None else config
+    sid = str(skill_id if skill_id is not None else cfg.get(stage + '_skill_id', 'auto'))
+    if sid == 'none':
+        return ''
+    if sid == 'auto':
+        sid = {'story': 'builtin:story-writing', 'script': 'builtin:story-writing',
+               'asset': 'builtin:qwen21-asset'}.get(stage, 'none')
+    return _阶段技能(sid, stage)
+
 
 def 获取文戏提示词规则(_context=None, 参数=None):
     """供技能注册表和 H3 提示词流程读取文戏规则。"""
@@ -566,6 +594,7 @@ def save_render_queue(data):
                     pass
 
 def render_queue_snapshot():
+    _sync_render_receipt_tasks()
     data = load_render_queue()
     items = []
     for item in data.get("items", []):
@@ -1881,9 +1910,35 @@ def gen_image(prompt, width=None, height=None, seed=None, save_name=None, image_
     return save_path, None
 
 # ============================== Dasiwa MiniMax H3 8步 r2v 视频 ==============================
-def load_r2v_workflow():
-    with open(os.path.join(WORKFLOWS_DIR, 'h3-dasiwa-8step.json'), 'r', encoding='utf-8') as f:
+def h3_workflow_catalog():
+    return [
+        {"id": "h3-dasiwa-8step", "name": "H3 多参考图 R2V（标准 8 步）", "file": "h3-dasiwa-8step.json"},
+        {"id": "h3-bunny-combat-ref2va", "name": "BUNNY Combat H3 REF2VA", "file": "h3-bunny-combat-ref2va.json"},
+    ]
+
+def load_r2v_workflow(workflow_id=None):
+    selected = str(workflow_id or runtime_config().get('h3_workflow_id') or 'h3-dasiwa-8step')
+    item = next((x for x in h3_workflow_catalog() if x['id'] == selected), None)
+    if not item:
+        item = h3_workflow_catalog()[0]
+    with open(os.path.join(WORKFLOWS_DIR, item['file']), 'r', encoding='utf-8') as f:
         return json.load(f)
+
+def _workflow_node(wf, class_type, title=None):
+    for nid, node in wf.items():
+        if node.get('class_type') == class_type and (title is None or title in str(node.get('_meta', {}).get('title', ''))):
+            return nid
+    return None
+
+def _r2v_nodes(wf):
+    return {
+        'ref': _workflow_node(wf, 'MiniMaxH3ReferenceToVideo'),
+        'prompt': _workflow_node(wf, 'PrimitiveStringMultiline') or _workflow_node(wf, 'PrimitiveString'),
+        'duration': _workflow_node(wf, 'PrimitiveFloat') or _workflow_node(wf, 'PrimitiveInt'),
+        'resolution': _workflow_node(wf, 'ResolutionSelector'),
+        'seed': _workflow_node(wf, 'RandomNoise'),
+        'scheduler': _workflow_node(wf, 'BasicScheduler'),
+    }
 
 def get_h3_steps():
     """采样步数 clamp 4~25"""
@@ -1972,7 +2027,11 @@ def gen_video_r2v(prompt, ref_image_paths, duration=None, seed=None, save_name=N
             return {"jimeng_url": url}, save_name or f"shot_{uuid.uuid4().hex[:8]}.mp4"
         except Exception as exc:
             return None, f"即梦视频生成失败: {exc}"
-    wf = copy.deepcopy(load_r2v_workflow())
+    workflow_id = runtime_config().get('h3_workflow_id') or 'h3-dasiwa-8step'
+    wf = copy.deepcopy(load_r2v_workflow(workflow_id))
+    nodes = _r2v_nodes(wf)
+    if not nodes['ref']:
+        return None, f'R2V工作流缺少必要节点：{workflow_id}'
     if not duration:
         cfg_dur = runtime_config().get('shot_duration', 8)
         duration = cfg_dur if isinstance(cfg_dur, (int, float)) else 8
@@ -1981,18 +2040,29 @@ def gen_video_r2v(prompt, ref_image_paths, duration=None, seed=None, save_name=N
 
     # Dasiwa 8步工作流的核心参数
     width, height = h3_video_size()
-    wf['6']['inputs']['prompt'] = prompt
-    wf['6']['inputs']['width'] = width
-    wf['6']['inputs']['height'] = height
-    wf['8']['inputs']['noise_seed'] = seed if seed is not None else random.randint(1, 2**62)
+    ref_node = wf[nodes['ref']]['inputs']
+    if nodes['prompt']:
+        wf[nodes['prompt']]['inputs']['value'] = prompt
+    else:
+        ref_node['prompt'] = prompt
+    ref_node['width'] = width
+    ref_node['height'] = height
+    if nodes['resolution']:
+        wf[nodes['resolution']]['inputs']['aspect_ratio'] = runtime_config().get('aspect_ratio', '16:9 (Widescreen)')
+        wf[nodes['resolution']]['inputs']['megapixels'] = float(runtime_config().get('megapixels', 0.92))
+    if nodes['seed']:
+        wf[nodes['seed']]['inputs']['noise_seed'] = seed if seed is not None else random.randint(1, 2**62)
     frames = h3_frames_from_duration(duration)
-    wf['6']['inputs']['length'] = frames
-    wf['7']['inputs']['steps'] = get_h3_steps()
+    ref_node['length'] = frames
+    if nodes['duration']:
+        wf[nodes['duration']]['inputs']['value'] = duration
+    if nodes['scheduler']:
+        wf[nodes['scheduler']]['inputs']['steps'] = get_h3_steps()
     # 参考图：删除模板占位图后统一重建（H3 r2v 官方支持最多9张）
     refs = [p for p in ref_image_paths if p and os.path.exists(p)][:9]
     if not refs:
         return None, "无有效参考图"
-    inputs6 = wf['6']['inputs']
+    inputs6 = ref_node
     for k in list(inputs6.keys()):
         if k.startswith('ref_images.ref_image_'):
             del inputs6[k]
@@ -2001,8 +2071,9 @@ def gen_video_r2v(prompt, ref_image_paths, duration=None, seed=None, save_name=N
         comfy_name = comfy_upload_image(path)
         load_nid = str(next_node_id); next_node_id += 1
         wf[load_nid] = {"inputs": {"image": comfy_name}, "class_type": "LoadImage", "_meta": {"title": f"参考图{i+1}"}}
-        inputs6[f'ref_images.ref_image_{i}'] = [load_nid, 0]
-    for old in ['20', '21', '22']:
+        key = f'ref_images.ref_image_{i}'
+        inputs6[key] = [load_nid, 0]
+    for old in ['20', '21', '22', '137', '152', '162']:
         wf.pop(old, None)
     # 参考音频（角色音色）：<Audio 1>~<Audio N>，最多3段
     auds = [p for p in (ref_audio_paths or []) if p and os.path.exists(p)][:3]
@@ -2755,7 +2826,7 @@ def review_shot_video(shot, video_path, ref_paths=None):
         parts += load_image_parts(frames, limit=5)
         parts += load_image_parts((ref_paths or [])[:3], limit=3)
         content, err = llm_chat([
-            {"role": "system", "content": SHOT_REVIEW_PROMPT},
+            {"role": "system", "content": selected_stage_skill("review") + "\n" + SHOT_REVIEW_PROMPT},
             {"role": "user", "content": parts}
         ], max_tokens=1200, temperature=0.2)
         if not content:
@@ -2839,11 +2910,12 @@ def gen_asset_image(kind, name, desc, style, characters=None, seed=None, prompt=
     返回 (path, prompt, err)。kind ∈ char/scene/prop；desc 为对应描述(appearance/description)。
     传入 prompt 时沿用用户编辑内容，并补充对应资产的画幅与场景约束；否则自动构造。
     该函数被主管线阶段2与"重新生成单张资产/资产提示词重生成"接口共用，保证产物风格一致。"""
+    supplied_prompt = bool(prompt)
     if not prompt:
         if kind in ('char', 'character'):
             prompt = (f"{style}风格，16:9横屏角色设定参考图，单行四栏排版：画面从左到右均分为4个竖向分格——"
-                      f"第1格：角色面部特写（五官清晰、表情中性、直视镜头）；"
-                      f"第2格：同一角色全身正面站立照；第3格：同一角色全身背面站立照；第4格：同一角色全身侧面站立照。"
+                      f"第1格：正面半身图（完整展示头顶至腰部、表情中性、直视镜头）；"
+                      f"第2格：同一角色全身正面站立照；第3格：同一角色左侧面全身站立照（鼻尖朝画面左方）；第4格：同一角色背面全身站立照。"
                       f"角色身份设定：{ensure_race_desc(desc)}。"
                       f"四个分格中角色的脸型、发型、体型、肤色和标志性配饰必须完全一致；四栏保持同一套服装，三个全身视图均从头到脚完整入画，纯色素净背景，站姿端正，画质精美，细节丰富。")
         elif kind == 'scene':
@@ -2853,6 +2925,17 @@ def gen_asset_image(kind, name, desc, style, characters=None, seed=None, prompt=
                       f"光影考究，环境细节丰富，静态陈设清晰完整。画面内容为纯粹的环境空间与静物。画质精美。")
         else:  # prop
             prompt = f"{style}风格，关键道具特写参考图（无人物）。{desc}。纯色素净背景，道具居中完整展示，材质纹理细节清晰，画质精美。"
+    asset_rules = selected_stage_skill('asset')
+    if asset_rules and not supplied_prompt:
+        refined, error = llm_chat([
+            {"role": "system", "content": asset_rules + "\n按以上规则优化图片提示词。保留主体身份、用户设定与画幅。只输出完整图片提示词，不输出分析。"},
+            {"role": "user", "content": json.dumps({"资产类型": kind, "名称": name, "描述": desc,
+                "画风": style, "有参考图": bool(runtime_config().get("asset_reference_id")),
+                "任务": "整理生成提示词；参考图由应用接入，不假称已看图", "当前提示词": prompt}, ensure_ascii=False)},
+        ], max_tokens=2500, temperature=0.3)
+        if not refined:
+            return None, prompt, error or '资产技能未返回提示词'
+        prompt = refined.strip()
     reference_path = None
     reference_id = runtime_config().get('asset_reference_id')
     if reference_id:
@@ -3269,6 +3352,7 @@ def render_project_shot(
     camera=None,
     progress_callback=None,
     video_model=None,
+    h3_workflow_id=None,
     allow_disconnected=False,
 ):
     """渲染并保存一个项目镜头，供渲染 Agent 和外部编排器调用。"""
@@ -3339,6 +3423,8 @@ def render_project_shot(
     os.makedirs(out_dir, exist_ok=True)
     parent_runtime_config = getattr(_RUNTIME, 'config', None)
     set_runtime_config(project_render_config(project))
+    if h3_workflow_id:
+        set_runtime_config({**runtime_config(), 'h3_workflow_id': h3_workflow_id})
     try:
         render_lock = (
             contextlib.nullcontext()
@@ -3808,14 +3894,7 @@ def build_script_prompt(series_ctx=None, idea=''):
     from agents.script.skills.wardrobe import 服装规则
     base = SCRIPT_PARSE_PROMPT.replace('%DURATION_RULE%', duration_rule).replace('%COUNT_RULE%', count_rule)
     base += '\n\n【逐镜服装规划与验收】\n' + 服装规则
-    script_skill_id = str(runtime_config().get('script_skill_id') or 'auto')
-    script_skill = _阶段技能(script_skill_id, 'script')
-    if script_skill:
-        base += (
-            "\n\n【剧本解析 Skill】\n"
-            "以下是当前项目指定的剧本解析 Skill。请在不违反系统 JSON 结构、镜头时长和安全约束的前提下执行：\n"
-            + script_skill
-        )
+    base += '\n\n【故事创作与改稿：仅应用叙事规则，输出遵守本接口剧本JSON结构】\n' + selected_stage_skill('script')
     skill_mode = 获取提示词技能模式(idea)
     if skill_mode.startswith(('custom:', 'builtin:')):
         base += (
@@ -4222,14 +4301,10 @@ def run_agent_pipeline(pid, idea, send, custom_assets=False, run_id=None):
         if series_ctx:
             import_series_assets(current, series_ctx)
             save_project(current)
-        asset_result, current = dispatch("资产智能体")
-        # Agent 管线的资产智能体一次性返回全部结果；逐张转成 SSE，
-        # 让前端无需刷新页面就能把已经落盘的图片显示到对应卡片。
-        asset_results = ((asset_result.get("数据") or {}).get("results") or [])
-        for asset in asset_results:
+        def asset_ready(asset, done, total):
             path = asset.get("path")
             if not path:
-                continue
+                return
             event("asset", {
                 "type": asset.get("kind", "scene"),
                 "name": asset.get("name", ""),
@@ -4237,12 +4312,14 @@ def run_agent_pipeline(pid, idea, send, custom_assets=False, run_id=None):
                 "prompt": asset.get("prompt", ""),
                 "cached": bool(asset.get("cached")),
             })
-        if asset_results:
             event("progress", {
                 "stage": 3,
-                "done": len(asset_results),
-                "total": len(asset_results),
+                "done": done,
+                "total": total,
             })
+        # 每张图片保存后立即推送，不等待整批生成结束。
+        asset_result, current = dispatch("资产智能体", {"progress_callback": asset_ready})
+        asset_results = ((asset_result.get("数据") or {}).get("results") or [])
         if current.get("series"):
             sync_series_assets(current, current["series"])
         stage(3, "资产智能体", "done", "资产文件已验收")
@@ -4818,7 +4895,7 @@ def api_batch_update_shots(pid):
     save_project(proj)
     return jsonify({"ok": True, "updated": len(shots_payload)})
 
-def _agent_render_selected_shot(pid, index, prompt=None, duration=None, progress_callback=None, video_model=None, planned=False, allow_disconnected=False):
+def _agent_render_selected_shot(pid, index, prompt=None, duration=None, progress_callback=None, video_model=None, planned=False, allow_disconnected=False, h3_workflow_id=None):
     """All project render entry points share planning, preflight and visual handoff."""
     project = load_project(pid)
     if not project:
@@ -4860,6 +4937,7 @@ def _agent_render_selected_shot(pid, index, prompt=None, duration=None, progress
     result = dispatch("渲染智能体", {"index": index, "prompt": prompt,
                         "duration": duration or shot.get("duration", 8),
                         "progress_callback": progress_callback, "video_model": video_model,
+                        "h3_workflow_id": h3_workflow_id,
                         "allow_disconnected": allow_disconnected})
     return result
 
@@ -4921,6 +4999,8 @@ def _render_selected_shots(pid, indexes, send, task=None, exact_selection=False)
                 'created': time.time(),
                 'updated': time.time(),
             }
+            with SUBMITTED_RENDER_RECEIPTS_LOCK:
+                SUBMITTED_RENDER_RECEIPTS.add(receipt_id)
             rerender_store(PROJECTS_DIR, pid).save(receipt_id, receipt)
             _RUNTIME.batch_render_receipt = receipt
         try:
@@ -4942,12 +5022,16 @@ def _render_selected_shots(pid, indexes, send, task=None, exact_selection=False)
                 emit('shot_review', {'index': index, **(reviewed.get('数据') or {})})
             return result
         except Exception as exc:
-            if receipt is not None:
+            if receipt is not None and receipt.get('status') != 'done':
                 receipt.update(status='error', msg=str(exc), updated=time.time())
+                if recoverable_receipt(receipt):
+                    receipt.update(status='running', phase='恢复原任务')
             raise
         finally:
             if receipt is not None:
                 rerender_store(PROJECTS_DIR, pid).save(receipt['id'], receipt)
+                with SUBMITTED_RENDER_RECEIPTS_LOCK:
+                    SUBMITTED_RENDER_RECEIPTS.discard(receipt['id'])
                 try:
                     delattr(_RUNTIME, 'batch_render_receipt')
                 except AttributeError:
@@ -5025,7 +5109,8 @@ def api_render_selected_stream(pid):
             receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             continue
-        if receipt.get('status') == 'running' and receipt.get('prompt_id') and receipt.get('node_url'):
+        from core.rerender_state import recoverable
+        if recoverable(receipt):
             in_flight.add(receipt.get('index'))
     indexes = [i for i in indexes if i not in in_flight]
     if not indexes:
@@ -5118,10 +5203,43 @@ def api_render_selected_stream(pid):
     return Response(stream(), mimetype='text/event-stream', headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
 # 分镜重渲染后台任务（手动模式下"编辑提示词→重新渲染该镜"用）
-from core.rerender_state import store as rerender_store, recover as recover_rerender
+from core.rerender_state import store as rerender_store, recover as recover_rerender, recoverable as recoverable_receipt
 RERENDER_TASKS = {}
 SUBMITTED_RENDER_RECEIPTS = set()
 SUBMITTED_RENDER_RECEIPTS_LOCK = threading.RLock()
+
+def _sync_render_receipt_tasks():
+    """Rebuild visible task state from durable receipts, including after restart."""
+    groups = {}
+    for path in Path(PROJECTS_DIR).glob('*/rerender_tasks/*.json'):
+        try:
+            receipt = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            continue
+        if receipt.get('kind') != 'batch':
+            if receipt.get('id') not in RERENDER_TASKS:
+                RERENDER_TASKS[receipt['id']] = receipt
+            continue
+        group_id = receipt['id'].rsplit('_', 1)[0]
+        groups.setdefault(group_id, []).append(receipt)
+    for group_id, receipts in groups.items():
+        task = BATCH_RENDER_TASKS.setdefault(group_id, {
+            'id': group_id, 'pid': receipts[0]['pid'],
+            'indexes': sorted(r['index'] for r in receipts), 'status': 'error'})
+        if task.get('status') in ('removed', 'done'):
+            continue
+        with SUBMITTED_RENDER_RECEIPTS_LOCK:
+            if any(r['id'] in SUBMITTED_RENDER_RECEIPTS for r in receipts):
+                continue
+        done = sum(r.get('status') == 'done' for r in receipts)
+        if done == len(task.get('indexes', [])):
+            task.update(status='done', progress=100, phase='分镜已恢复',
+                        msg='本批视频已全部接回，可查看分镜或合成成片', updated=time.time())
+        elif any(recoverable_receipt(r) for r in receipts):
+            task.update(status='running', phase='恢复原任务',
+                        msg='连接中断，正在接回已提交的视频，请勿重复生成',
+                        progress=round(done * 100 / max(1, len(task.get('indexes', [])))))
+
 
 def _recover_submitted_render_receipts_once():
     """把服务重启前已提交、但尚未下载的 ComfyUI 结果接回项目。"""
@@ -5129,11 +5247,8 @@ def _recover_submitted_render_receipts_once():
     for task_path in Path(PROJECTS_DIR).glob('*/rerender_tasks/*.json'):
         pid = task_path.parent.parent.name
         task_id = task_path.stem
-        with SUBMITTED_RENDER_RECEIPTS_LOCK:
-            if task_id in SUBMITTED_RENDER_RECEIPTS:
-                continue
         task = rerender_store(PROJECTS_DIR, pid).load(task_id)
-        if not isinstance(task, dict) or task.get('status') != 'running':
+        if not isinstance(task, dict) or not recoverable_receipt(task):
             continue
         # A receipt is written before submission; wait until set_prompt has
         # persisted the prompt_id and node URL instead of turning a queued
@@ -5141,10 +5256,17 @@ def _recover_submitted_render_receipts_once():
         if not task.get('prompt_id') or not task.get('node_url'):
             continue
         with SUBMITTED_RENDER_RECEIPTS_LOCK:
+            if task_id in SUBMITTED_RENDER_RECEIPTS:
+                continue
             SUBMITTED_RENDER_RECEIPTS.add(task_id)
         try:
+            task = rerender_store(PROJECTS_DIR, pid).load(task_id)
+            if not recoverable_receipt(task):
+                continue
             result = recover_rerender(task, sys.modules[__name__])
             rerender_store(PROJECTS_DIR, pid).save(task_id, result)
+            if task_id in RERENDER_TASKS:
+                RERENDER_TASKS[task_id].update(result)
             if result.get('status') == 'done':
                 recovered += 1
         except Exception as exc:
@@ -5162,7 +5284,7 @@ def _render_receipt_recovery_loop():
             print(f'[渲染回执] 扫描失败: {exc}', flush=True)
         time.sleep(5)
 
-def _rerender_worker(task_id, pid, index, prompt, video_model=None, duration_override=None):
+def _rerender_worker(task_id, pid, index, prompt, video_model=None, duration_override=None, h3_workflow_id=None):
     task = RERENDER_TASKS[task_id]
     with SUBMITTED_RENDER_RECEIPTS_LOCK:
         SUBMITTED_RENDER_RECEIPTS.add(task_id)
@@ -5172,10 +5294,12 @@ def _rerender_worker(task_id, pid, index, prompt, video_model=None, duration_ove
             task.update(progress=info.get('percent', 0), phase=info.get('phase', '渲染中'),
                         elapsed=info.get('elapsed', 0), eta=info.get('eta', 0), updated=time.time())
         result = _agent_render_selected_shot(pid, index, prompt, duration_override, progress, video_model,
-                                             allow_disconnected=True)
+                                             allow_disconnected=True, h3_workflow_id=h3_workflow_id)
         task.update(status='done', msg='重渲染完成', video_url=result['video_url'])
     except Exception as exc:
         task.update(status='error', msg=str(exc))
+        if recoverable_receipt(task):
+            task.update(status='running', phase='恢复原任务')
     finally:
         rerender_store(PROJECTS_DIR, pid).save(task_id, task)
         _RUNTIME.rerender_receipt = None
@@ -5198,6 +5322,12 @@ def project_shot_rerender(pid, index):
     if not prompt:
         return jsonify({"error": "提示词为空"}), 400
     video_model = str(data.get('video_model') or '').strip() or None
+    h3_workflow_id = str(data.get('h3_workflow_id') or '').strip() or None
+    if h3_workflow_id:
+        if h3_workflow_id not in {x['id'] for x in h3_workflow_catalog()}:
+            return jsonify(error='未知的视频工作流'), 400
+        if project_render_config(proj).get('media_provider', 'comfyui') != 'comfyui':
+            return jsonify(error='工作流选择仅适用于 ComfyUI'), 400
     if video_model and media_provider() != 'jimeng':
         return jsonify({"error": "只有启用即梦 API 时才能选择视频模型"}), 400
     try:
@@ -5210,6 +5340,7 @@ def project_shot_rerender(pid, index):
     RERENDER_TASKS[task_id] = {"status": "running", "msg": "已加入队列", "pid": pid, "index": index, "video_url": "", "progress": 0, "elapsed": 0, "eta": 0, "phase": "排队中", "created": time.time(), "updated": time.time()}
     RERENDER_TASKS[task_id]['id'] = task_id
     RERENDER_TASKS[task_id]['prompt'] = prompt
+    RERENDER_TASKS[task_id]['h3_workflow_id'] = h3_workflow_id or project_render_config(proj).get('h3_workflow_id', 'h3-dasiwa-8step')
     rerender_store(PROJECTS_DIR, pid).save(task_id, RERENDER_TASKS[task_id])
     with PROJECT_IO_LOCK:
         latest = load_project(pid)
@@ -5217,7 +5348,7 @@ def project_shot_rerender(pid, index):
         save_project(latest)
     threading.Thread(
         target=_rerender_worker,
-        args=(task_id, pid, index, prompt, video_model, duration),
+        args=(task_id, pid, index, prompt, video_model, duration, h3_workflow_id),
         daemon=True,
     ).start()
     return jsonify({"task_id": task_id})
@@ -5352,8 +5483,10 @@ def project_asset_prompt_chat(pid, key):
     clean = [{"role": x.get('role'), "content": str(x.get('content') or '')[:2000]}
              for x in history[-10:] if isinstance(x, dict) and x.get('role') in ('user','assistant') and x.get('content')]
     system = "你是短剧资产图片提示词编辑。只按用户要求修改提示词，保留未提及内容和主体身份。输出JSON对象，字段reply（简短中文说明）和prompt（完整图片生成提示词，不要Markdown）。"
+    system = selected_stage_skill('asset', data.get('skill_id'), proj.get('render_config') or runtime_config()) + '\n' + system
     if key.startswith('scene_'):
         system += '\n' + SCENE_REFERENCE_RULE + '根据场景内容在最终提示词中明确写出室内平视或室外鸟瞰中的一种，删除冲突的旧视角和人物描写。'
+    system += "\n资产类型：" + key.split("_", 1)[0] + "；参考图状态：" + ("由项目接入" if (proj.get("render_config") or {}).get("asset_reference_id") else "未提供，不假称有图")
     user = f"【当前资产提示词】\n{prompt}\n\n【用户修改要求】\n{message}"
     try:
         content, err = llm_chat([{"role":"system","content":system}, *clean, {"role":"user","content":user}], max_tokens=2500, temperature=0.35, timeout=180, model=model)
@@ -5389,9 +5522,7 @@ def project_rerender_status(pid, task_id):
             t = rerender_store(PROJECTS_DIR, pid).load(task_id)
             if not t:
                 return jsonify(status='error', msg='任务回执不存在，不能以旧视频代替新结果'), 404
-            if t.get('status') == 'running':
-                t = recover_rerender(t, sys.modules[__name__])
-                rerender_store(PROJECTS_DIR, pid).save(task_id, t)
+            # The background recovery loop owns downloads and commit locking.
     return jsonify(t)
 
 @app.route('/api/project/<pid>/resynth')
@@ -6327,12 +6458,12 @@ def api_skills():
     data = request.get_json(silent=True) or {}
     name = str(data.get('name') or '').strip()
     content = str(data.get('content') or '')
-    stages = [str(x) for x in (data.get('stages') or []) if str(x) in ('script', 'video_prompt', 'asset', 'review', 'compose')]
+    stages = [str(x) for x in (data.get('stages') or []) if str(x) in ('story', 'script', 'video_prompt', 'asset', 'review')]
     if not name or not content.strip():
         return jsonify({"ok": False, "msg": "Skill 名称和内容不能为空"}), 400
     if len(content.encode('utf-8')) > 1024 * 1024:
         return jsonify({"ok": False, "msg": "Skill 内容不能超过 1MB"}), 400
-    safe_name = re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
+    safe_name = re.sub(r'[^\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
     filename = f"custom_{uuid.uuid4().hex[:12]}_{safe_name}.md"
     with open(os.path.join(CUSTOM_SKILLS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(content)
@@ -6350,8 +6481,11 @@ def api_skills_import():
     ext = os.path.splitext(upload.filename)[1].lower()
     if ext not in ('.md', '.txt'):
         return jsonify({"ok": False, "msg": "仅支持 .md 或 .txt 文件"}), 400
+    raw = upload.read(1024 * 1024 + 1)
+    if len(raw) > 1024 * 1024:
+        return jsonify(ok=False, msg='Skill 内容不能超过 1MB'), 400
     try:
-        content = upload.read().decode('utf-8-sig')
+        content = raw.decode('utf-8-sig')
     except UnicodeDecodeError:
         return jsonify({"ok": False, "msg": "Skill 文件必须使用 UTF-8 编码"}), 400
     if not content.strip():
@@ -6359,8 +6493,8 @@ def api_skills_import():
     name = str(request.form.get('name') or os.path.splitext(os.path.basename(upload.filename))[0]).strip()
     description = str(request.form.get('description') or '').strip()
     stages_raw = str(request.form.get('stages') or 'video_prompt')
-    stages = [x for x in stages_raw.split(',') if x in ('script', 'video_prompt', 'asset', 'review', 'compose')]
-    safe_name = re.sub(r'[^\\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
+    stages = [x for x in stages_raw.split(',') if x in ('story', 'script', 'video_prompt', 'asset', 'review')]
+    safe_name = re.sub(r'[^\w.-]+', '_', name, flags=re.UNICODE).strip('._')[:60] or 'skill'
     filename = f"custom_{uuid.uuid4().hex[:12]}_{safe_name}{ext}"
     with open(os.path.join(CUSTOM_SKILLS_DIR, filename), 'w', encoding='utf-8') as f:
         f.write(content)
@@ -6377,7 +6511,7 @@ def api_skill_detail(skill_id):
     if not item:
         return jsonify({"ok": False, "msg": "Skill 不存在"}), 404
     if request.method == 'GET':
-        item["content"] = _技能内容(sid)
+        item["content"] = (_阶段技能(sid, item['stages'][0]) if item.get('agent_skill') else _技能内容(sid))
         return jsonify({"ok": True, "skill": item})
     if item.get("builtin"):
         return jsonify({"ok": False, "msg": "内置 Skill 只读，请复制后新建自定义 Skill"}), 403
@@ -6389,7 +6523,7 @@ def api_skill_detail(skill_id):
         index = _读取技能索引()
         index.pop(filename, None)
         _保存技能索引(index)
-        for key in ('video_skill_id', 'script_skill_id'):
+        for key in ('video_skill_id', 'script_skill_id', 'story_skill_id', 'asset_skill_id', 'review_skill_id'):
             if CONFIG.get(key) == sid:
                 CONFIG[key] = 'auto'
         if CONFIG.get('prompt_skill_mode') == sid:
@@ -6401,7 +6535,9 @@ def api_skill_detail(skill_id):
     content = str(data.get('content') or '')
     if not name or not content.strip():
         return jsonify({"ok": False, "msg": "Skill 名称和内容不能为空"}), 400
-    stages = [str(x) for x in (data.get('stages') or item.get('stages') or []) if str(x) in ('script', 'video_prompt', 'asset', 'review', 'compose')]
+    stages = [str(x) for x in (data.get('stages') or item.get('stages') or []) if str(x) in ('story', 'script', 'video_prompt', 'asset', 'review')]
+    if len(content.encode('utf-8')) > 1024 * 1024:
+        return jsonify(ok=False, msg='Skill 内容不能超过 1MB'), 400
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
     index = _读取技能索引()
@@ -6454,8 +6590,11 @@ def api_llm_models():
         except Exception:
             pass
         # 本地 Qwen 服务有时不暴露完整 /models 列表，保留已安装的 Qwen3.8 作为可选项。
-        if runtime_config().get('llm_mode') == 'local':
-            models.extend(['qwen3.8', 'qwen3.8-27b'])
+        cfg = runtime_config()
+        models.extend(['qwen3.5-4b', 'qwen3.8', 'qwen3.8-27b', 'deepseek-chat', 'deepseek-reasoner'])
+        for profile in cfg.get('llm_profiles') or []:
+            if isinstance(profile, dict) and profile.get('model'):
+                models.append(str(profile['model']).strip())
         return jsonify(ok=True, current=current or '', models=list(dict.fromkeys(models)))
     result = api_llm_test()
     return result
@@ -6470,7 +6609,16 @@ def api_llm_available_models():
         models.extend(m.get('id') for m in payload.get('data', []) if isinstance(m, dict) and m.get('id'))
     except Exception:
         pass
+    cfg = runtime_config()
+    models.extend(['qwen3.5-4b', 'qwen3.8', 'qwen3.8-27b', 'deepseek-chat', 'deepseek-reasoner'])
+    for profile in cfg.get('llm_profiles') or []:
+        if isinstance(profile, dict) and profile.get('model'):
+            models.append(str(profile['model']).strip())
     return jsonify(ok=True, current=current or '', models=list(dict.fromkeys(models)))
+
+@app.get('/api/comfy/workflows')
+def api_comfy_workflows():
+    return jsonify(ok=True, workflows=h3_workflow_catalog())
 
 @app.get('/api/comfy/nodes-status')
 def api_comfy_nodes_status():
@@ -6655,15 +6803,8 @@ def api_story_chat():
                for item in history[-8:] if isinstance(item, dict)
                and item.get('role') in ('user', 'assistant')
                and isinstance(item.get('content'), str)]
-    content, error = llm_chat([
-        {'role': 'system', 'content': '''你是故事编辑，通过多轮对话修改用户当前的故事正文。
-以当前正文为准，只修改用户要求的部分，保留未要求改动的人物、剧情和细节。
-保持原文语言和文本形式，输出完整修改后的正文，不要省略或使用“其余不变”。
-如果用户仅咨询，回答问题并原样返回正文。不要生成结构化分镜或导演参数。
-严格输出JSON：{"reply":"简短说明改动或回答问题","story":"完整故事正文"}。'''},
-        {'role': 'user', 'content': json.dumps({'当前正文': idea, '此前对话': history,
-                                               '本次要求': message}, ensure_ascii=False)},
-    ], max_tokens=16000, temperature=0.55, retries=1, timeout=180, model=model)
+    content, error = 剧本智能体.编辑故事(llm_chat, idea, message, history, model=model,
+        guidance=selected_stage_skill('story', data.get('skill_id')))
     if not content:
         return jsonify(ok=False, msg=f"AI修改失败：{error or '模型没有返回内容'}"), 502
     result = parse_json_from_text(content)
@@ -6732,6 +6873,9 @@ def api_pipeline_run():
                 request_cfg['megapixels'] = max(0.1, min(float(mp_arg), 4.0))
             except ValueError:
                 pass
+        workflow_arg = request.args.get('h3_workflow_id')
+        if workflow_arg in {x['id'] for x in h3_workflow_catalog()}:
+            request_cfg['h3_workflow_id'] = workflow_arg
         steps_arg = request.args.get('h3_steps')
         if steps_arg:
             try:
@@ -6767,6 +6911,10 @@ def api_pipeline_run():
             item["id"] == script_skill_arg and "script" in (item.get("stages") or []) for item in skills_catalog()
         ):
             request_cfg['script_skill_id'] = script_skill_arg
+        for stage in ('story', 'asset', 'review'):
+            value = request.args.get(stage + '_skill')
+            if value is not None:
+                request_cfg[stage + '_skill_id'] = value
         subtitle_arg = request.args.get('subtitle')
         if subtitle_arg is not None:
             request_cfg['subtitle_enabled'] = subtitle_arg in ('1', 'true', 'True', 'yes')
@@ -6788,7 +6936,7 @@ def api_pipeline_run():
     if existing_proj and isinstance(existing_proj.get('render_config'), dict):
         # 断点续跑优先沿用项目自身配置，再合并本次页面明确传入后的CONFIG
         merged_cfg = project_render_config(existing_proj)
-        for k in ('style','aspect_ratio','megapixels','h3_steps','shot_duration','shot_count','prompt_skill_mode','video_skill_id','script_skill_id','subtitle_enabled','manual_mode','batch_prompt_mode','script_review_mode','agent_pipeline_enabled',
+        for k in ('style','aspect_ratio','megapixels','h3_steps','h3_workflow_id','shot_duration','shot_count','prompt_skill_mode','video_skill_id','script_skill_id','story_skill_id','asset_skill_id','review_skill_id','subtitle_enabled','manual_mode','batch_prompt_mode','script_review_mode','agent_pipeline_enabled',
                   'media_provider','jimeng_base_url','jimeng_api_key','jimeng_image_model','jimeng_video_model','jimeng_image_resolution','jimeng_ratio'):
             merged_cfg[k] = request_cfg.get(k, merged_cfg.get(k))
         request_cfg = merged_cfg
@@ -7311,6 +7459,7 @@ def api_project_script_chat(pid):
 duration限制在8到15秒，shots的index从1连续编号。角色、场景、道具的名称必须与shots中的引用一致。
 输出严格JSON，不要Markdown代码块，不要额外解释，格式：
 {"reply":"用中文简短说明本次改动","script":{完整修改后的剧本JSON}}"""
+    system_prompt = selected_stage_skill('script', data.get('skill_id'), project.get('render_config') or runtime_config()) + '\n\n【当前接口输出契约，优先于技能默认交付形式】\n' + system_prompt
     user_prompt = (
         "【当前剧本】\n" + json.dumps(script, ensure_ascii=False, indent=2) +
         "\n\n【此前对话】\n" + json.dumps(history, ensure_ascii=False) +
@@ -7322,6 +7471,7 @@ duration限制在8到15秒，shots的index从1连续编号。角色、场景、�
         temperature=0.55,
         retries=1,
         timeout=180,
+        model=str(data.get('model') or '').strip() or None,
     )
     if not content:
         return jsonify({"ok": False, "msg": f"AI修改失败: {error or '模型没有返回内容'}"}), 502
@@ -8223,6 +8373,9 @@ if os.environ.get('SHORT_DRAMA_MULTIUSER', '1') == '1':
 
 from core.reference_sync import register_reference_sync
 register_reference_sync(globals())
+
+from infrastructure.system_update import register_system_update
+register_system_update(globals())
 
 if __name__ == '__main__':
     try:

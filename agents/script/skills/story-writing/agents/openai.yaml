@@ -1,0 +1,4 @@
+interface:
+  display_name: "故事创作与改稿"
+  short_description: "写故事与精修改稿，统筹人物动机、因果、冲突反转和情感回收"
+  default_prompt: "请用 $story-writing 按我的创意写故事，或按修改要求优化现有故事，保留我锁定的设定。"

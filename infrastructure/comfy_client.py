@@ -35,7 +35,22 @@ class Comfy客户端:
             json=payload,
             timeout=timeout,
         )
-        response.raise_for_status()
+        if response.status_code >= 400:
+            try:
+                detail = response.json()
+            except ValueError:
+                detail = {}
+            messages = []
+            if isinstance(detail, dict):
+                for node_id, node in (detail.get('node_errors') or {}).items():
+                    for error in node.get('errors') or []:
+                        messages.append(f"节点 {node_id} ({node.get('class_type', '')}): "
+                                        f"{error.get('message', '')} {error.get('details', '')}")
+                if not messages and detail.get('error'):
+                    messages.append(str(detail['error']))
+            if messages:
+                raise RuntimeError(f"ComfyUI提交失败 HTTP {response.status_code}: " + '；'.join(messages))
+            response.raise_for_status()
         payload = response.json()
         prompt_id = payload.get("prompt_id")
         if not prompt_id:
@@ -93,7 +108,7 @@ class Comfy客户端:
             return history[prompt_id], None
         except Exception as exc:
             self.logger(f"[ComfyUI] 历史轮询异常: {exc}")
-            return None, None
+            return None, f"ComfyUI历史连接异常: {exc}"
 
     def 下载(self, file_info, save_path, timeout=120):
         params = {

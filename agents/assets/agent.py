@@ -39,6 +39,12 @@ class 资产智能体实例(智能体基类):
             return 技能结果(False, 错误="没有找到待处理的资产")
 
         results = []
+        progress_callback = 参数.get("progress_callback")
+
+        def notify_asset():
+            if callable(progress_callback):
+                progress_callback(dict(results[-1]), len(results), len(targets))
+
         assets = project.setdefault("assets", {})
         for kind, output_kind, skill, item, desc_key in targets:
             key = f"{kind}_{item['name']}"
@@ -55,6 +61,7 @@ class 资产智能体实例(智能体基类):
                     "prompt": current.get("prompt", ""),
                     "cached": True,
                 })
+                notify_asset()
                 continue
             result = self.调用技能(
                 技能注册表,
@@ -97,6 +104,7 @@ class 资产智能体实例(智能体基类):
                 "cached": False,
             })
             app.save_project(project)
+            notify_asset()
 
         project["assets_checked"] = True
         self.记录决策(project, "接受资产", f"完成{len(results)}项资产处理", 1, {"results": results}, "已完成")

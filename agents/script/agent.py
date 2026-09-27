@@ -9,8 +9,12 @@ from core.skill_result import 技能结果
 class 剧本智能体实例(智能体基类):
     名称 = "剧本智能体"
     阶段 = "剧本"
-    说明 = "把故事创意转换为结构化短剧剧本，并检查剧本结构。"
+    说明 = "使用故事创作与改稿技能优化人物、因果和节奏，生成并检查结构化短剧剧本。"
     技能清单 = ("解析故事创意", "检查镜头数量", "检查角色引用", "检查剧情节奏", "检查镜头服装", "修复剧本 JSON")
+
+    def 编辑故事(self, llm_chat, idea, message, history, model=None, guidance=None):
+        from .story_editor import edit_story
+        return edit_story(llm_chat, idea, message, history, model=model, guidance=guidance)
 
     def 执行(self, 项目, 技能注册表, 参数=None):
         参数 = dict(参数 or {})

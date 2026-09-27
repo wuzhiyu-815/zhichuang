@@ -11,18 +11,29 @@ def store(root, pid):
     return JSON存储(Path(root) / pid / 'rerender_tasks', lambda key: key + '.json')
 
 
+def recoverable(task):
+    if not task.get('prompt_id') or not task.get('node_url'):
+        return False
+    if task.get('status') == 'running':
+        return True
+    message = str(task.get('msg', '')).lower()
+    return task.get('status') == 'error' and any(token in message for token in (
+        '历史接口返回 http', '历史连接异常', '生成超时', 'timed out',
+        'connection', '502', '503', '504', '下载返回空文件'))
+
+
 def recover(task, engine):
     if not task.get('prompt_id') or not task.get('node_url'):
         return dict(task, status='error', msg='服务中断，缺少生成回执；请核查节点，勿重复提交')
     client = Comfy客户端(lambda: task['node_url'])
     history, error = client.历史(task['prompt_id'])
     if not history:
-        return dict(task, msg=error or '正在等待原生成任务', phase='恢复原任务')
+        return dict(task, status='running', msg=error or '正在等待原生成任务', phase='恢复原任务')
     status = history.get('status', {})
     if status.get('status_str') == 'error':
         return dict(task, status='error', msg='原生成任务失败')
     if not status.get('completed'):
-        return task
+        return dict(task, status='running', phase='恢复原任务')
     candidates = [item for output in history.get('outputs', {}).values()
                   for key in ('images', 'gifs', 'videos') for item in output.get(key, [])
                   if str(item.get('filename', '')).lower().endswith(('.mp4', '.webm'))]
@@ -34,12 +45,17 @@ def recover(task, engine):
     # path.  Keeping this branch here means a service restart can finish an
     # already-submitted ComfyUI job without submitting a duplicate job.
     is_batch = task.get('kind') == 'batch'
-    path = (Path(engine.OUTPUTS_DIR) / pid / f'shot_{index:02d}.mp4' if is_batch else
-            Path(engine.OUTPUTS_DIR) / pid / 'versions' / f'shot_{index:02d}' / (task['id'] + '.mp4'))
+    path = Path(engine.OUTPUTS_DIR) / pid / 'versions' / f'shot_{index:02d}' / (task['id'] + '.mp4')
     path.parent.mkdir(parents=True, exist_ok=True)
     client.下载(candidates[0], str(path))
     subprocess.run(['ffmpeg', '-v', 'error', '-i', str(path), '-f', 'null', '-'], check=True, timeout=120, capture_output=True)
     with engine.PROJECT_IO_LOCK:
+        receipts = store(engine.PROJECTS_DIR, pid)
+        for key in receipts.keys():
+            newer = receipts.load(key) or {}
+            if (newer.get('index') == index and newer.get('id') != task['id']
+                    and newer.get('created', 0) > task.get('created', 0)):
+                return dict(task, status='superseded', msg='已有更新的生成任务；原结果已保存在历史目录')
         project = engine.load_project(pid)
         shot = next((s for s in project.get('shots', []) if s.get('index') == index), None)
         if shot is None:
@@ -53,6 +69,11 @@ def recover(task, engine):
             return dict(task, status='error', msg='已有更新的重制任务；本次视频已保存在历史目录')
         engine._archive_before_overwrite(project, index)
         if is_batch:
+            import shutil
+            canonical = Path(engine.OUTPUTS_DIR) / pid / f'shot_{index:02d}.mp4'
+            staging = canonical.with_suffix('.recovering')
+            shutil.copyfile(path, staging)
+            os.replace(staging, canonical)
             shot.update(path=os.path.join('outputs', pid, f'shot_{index:02d}.mp4'),
                         video_url=f'/file/outputs/{pid}/shot_{index:02d}.mp4?t={int(time.time())}',
                         prompt=task.get('prompt') or shot.get('prompt', ''),

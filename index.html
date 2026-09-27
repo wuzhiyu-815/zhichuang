@@ -99,7 +99,7 @@
             <div class="text-xs text-gray-400">按环节选择 Skill；自动模式会根据内容判断</div>
             <button type="button" onclick="openSkillsManager()" class="ml-auto px-3 py-2 rounded-lg glass text-xs text-cyan-200 hover:bg-cyan-400/15">管理 Skills</button>
           </div>
-          <div class="grid md:grid-cols-2 gap-2 mt-3">
+          <div class="grid md:grid-cols-2 gap-2 mt-3"><label class="text-xs text-gray-400">故事创作与改稿<select id="story-skill-mode" onchange="queueDraftSave();syncMainConfig()" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" aria-label="故事创作与改稿技能"><option value="auto">默认规则</option></select></label><label class="text-xs text-gray-400">资产图片提示词<select id="asset-skill-mode" onchange="queueDraftSave();syncMainConfig()" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" aria-label="资产图片提示词技能"><option value="auto">默认规则</option></select></label><label class="text-xs text-gray-400">视频审片<select id="review-skill-mode" onchange="queueDraftSave();syncMainConfig()" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" aria-label="视频审片技能"><option value="auto">默认规则</option></select></label>
             <label class="text-xs text-gray-400">剧本解析
               <select id="script-skill-mode" class="mt-1 w-full bg-black/40 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm" title="选择本项目剧本解析时使用的 Skill"></select>
             </label>
@@ -161,7 +161,7 @@
         <option value="__custom__">✏️ 自定义...</option>
       </select></div>
       <input id="styleCustom" placeholder="输入画风，如：吉卜力手绘" class="hidden bg-black/30 border border-yellow-400/40 rounded-lg px-3 py-2 text-sm w-44" oninput="this.classList.remove('border-red-400')">
-      <div class="story-output-field"><label class="text-xs text-gray-400">每镜时长</label><select id="shotDuration" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
+      <div class="story-output-field"><label class="text-xs text-gray-400">ComfyUI 多参考图视频工作流</label><select id="h3-workflow-id" onchange="queueDraftSave();syncMainConfig()" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm"><option value="h3-dasiwa-8step">H3 标准 8 步</option><option value="h3-bunny-combat-ref2va">BUNNY Combat H3 REF2VA（双阶段采样）</option></select><p class="text-xs text-gray-500">仅作用于 ComfyUI 多参考图视频；BUNNY 需节点端安装对应 Combat LoRA、模型和扩展节点。</p></div><div class="story-output-field"><label class="text-xs text-gray-400">每镜时长</label><select id="shotDuration" class="bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm">
         <option value="auto" selected>自动(8~15秒)</option>
         <option value="8">8秒</option><option value="10">10秒</option><option value="12">12秒</option><option value="15">15秒</option>
       </select></div>
@@ -475,6 +475,18 @@
           </div>
         </div>
       </div>
+      <section id="system-update-panel" data-team-admin class="border border-white/10 rounded-xl p-3 space-y-3">
+        <h4 class="font-bold text-sm">版本更新 · GitHub</h4>
+        <p class="text-xs text-gray-400">推送和更新使用本机当前分支。Windows 开发通常使用 dev，Ubuntu 正式部署使用 main。</p>
+        <div id="system-update-info" class="text-xs whitespace-pre-wrap">点击检查更新，查看分支、版本和未提交修改。</div>
+        <input id="system-update-message" maxlength="300" placeholder="本次修改说明（推送时填写）" class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
+        <div class="flex flex-wrap gap-2">
+          <button type="button" data-update-action onclick="systemUpdateAction('check')" class="glass px-3 py-2 rounded-lg text-xs">检查更新</button>
+          <button type="button" data-update-action onclick="systemUpdateAction('push')" class="glass px-3 py-2 rounded-lg text-xs">提交并推送代码</button>
+          <button type="button" data-update-action onclick="systemUpdateAction('update')" class="btn-gold px-3 py-2 rounded-lg text-xs">一键更新并重启</button>
+        </div>
+        <p class="text-xs text-gray-500">保留本机配置和项目数据。有生成任务或本地代码修改时不会覆盖更新。首次加载该功能需重启后端。</p>
+      </section>
       <button onclick="saveSettings()" class="btn-gold w-full py-2.5 rounded-xl">保存设置</button>
     </div>
   </div>
@@ -486,7 +498,7 @@
     <div class="flex items-center gap-3 mb-4">
       <div>
         <h3 class="font-bold text-lg">🧩 Skills 管理</h3>
-        <p class="text-xs text-gray-500 mt-1">统一管理剧本解析、视频提示词及后续环节可复用的规则技能。</p>
+        <p class="text-xs text-gray-500 mt-1">按实际调用环节管理技能；合成使用固定程序，不读取文字技能。导入时采用左侧所选阶段（未选则为视频提示词）。</p>
       </div>
       <div class="flex-1"></div>
       <input id="skills-import-file" type="file" accept=".md,.txt,text/markdown,text/plain" class="hidden" onchange="importSkillFile(this)">
@@ -498,7 +510,7 @@
       <aside class="soft-panel rounded-xl p-3 min-h-0 flex flex-col">
         <div class="flex items-center gap-2 mb-2"><span class="text-xs text-gray-400">技能列表</span><span id="skills-count" class="tag">0</span><div class="flex-1"></div><button onclick="loadSkills()" class="text-xs text-yellow-300" title="刷新 Skills">↻</button></div>
         <input id="skills-search" oninput="renderSkillsList()" class="w-full bg-black/30 border border-white/10 rounded-lg px-2.5 py-2 text-xs mb-2" placeholder="搜索名称或阶段…">
-        <div id="skills-list" class="space-y-2 overflow-y-auto min-h-0"></div>
+        <select id="skills-stage-filter" onchange="renderSkillsList()" class="bg-black/30 rounded-lg p-2 mb-2 text-xs" aria-label="筛选及导入阶段"><option value="">全部环节</option><option value="story">故事创作与改稿</option><option value="script">剧本解析</option><option value="asset">资产图片提示词</option><option value="video_prompt">视频提示词</option><option value="review">视频审片</option></select><div id="skills-list" class="space-y-2 overflow-y-auto min-h-0"></div>
       </aside>
       <section class="min-h-0 overflow-y-auto">
         <div id="skills-empty" class="workspace-muted">选择一个 Skill，或点击“新建”。</div>
@@ -513,13 +525,13 @@
               <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="video_prompt"> 视频提示词</label>
               <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="asset"> 资产生成</label>
               <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="review"> 审片</label>
-              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="compose"> 合成</label>
+              <label><input type="checkbox" class="skill-stage-check accent-cyan-400" value="story"> 故事创作与改稿</label>
             </div>
           </div>
           <div><label class="field-label">Skill 内容</label><textarea id="skill-edit-content" rows="18" class="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-xs font-mono resize-y" placeholder="写入可执行的规则、约束和输出格式…"></textarea></div>
           <div class="flex items-center gap-2">
             <span id="skills-editor-status" class="text-xs text-gray-500 flex-1"></span>
-            <button id="skill-copy-btn" onclick="copyCurrentSkill()" class="hidden text-xs px-3 py-2 rounded-lg glass text-cyan-200">复制为自定义</button>
+            <button onclick="exportCurrentSkill()" class="text-xs px-3 py-2 rounded-lg glass">导出 Markdown</button><button id="skill-copy-btn" onclick="copyCurrentSkill()" class="hidden text-xs px-3 py-2 rounded-lg glass text-cyan-200">复制为自定义</button>
             <button id="skill-delete-btn" onclick="deleteCurrentSkill()" class="hidden text-xs px-3 py-2 rounded-lg glass text-red-300">删除</button>
             <button id="skill-save-btn" onclick="saveCurrentSkill()" class="btn-gold text-xs px-5 py-2 rounded-lg">保存 Skill</button>
           </div>
@@ -693,6 +705,7 @@
       </div>
       <div id="script-chat-messages" class="script-chat-messages space-y-2 mb-2"></div>
       <div class="flex gap-2 items-end">
+        <select id="script-chat-model" class="ai-chat-model text-xs bg-black/30 border border-white/10 rounded-lg px-2" aria-label="本次对话模型"><option value="">使用当前 LLM</option></select>
         <textarea id="script-chat-input" rows="2" class="script-chat-input flex-1 bg-black/30 border border-white/10 rounded-lg p-2 text-xs resize-y" placeholder="告诉 AI 你想怎么修改剧本…"></textarea>
         <button id="script-chat-send" type="button" onclick="sendScriptChat()" class="px-4 py-2 rounded-lg glass hover:bg-cyan-400/20 text-cyan-200 text-xs">发送</button>
       </div>
@@ -793,6 +806,11 @@
     <div id="edit-chat-box" data-ai-chat="video" class="hidden"></div>
     </div>
     <div id="edit-video-settings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-2 rounded-xl bg-black/20 px-3 py-2">
+    <div id="edit-video-workflow-box" class="hidden flex items-center gap-2 md:col-span-2">
+      <label for="edit-video-workflow" class="text-xs text-gray-400 whitespace-nowrap">重制工作流</label>
+      <select id="edit-video-workflow" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs"><option value="">沿用项目工作流</option></select>
+      <span class="text-xs text-gray-500">仅本次重制</span>
+    </div>
     <div id="edit-video-model-box" class="flex items-center gap-2">
       <label class="text-xs text-gray-400 whitespace-nowrap">视频模型</label>
       <select id="edit-video-model" class="flex-1 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs">
@@ -928,6 +946,7 @@
 <script src="/static/ai-chat.js?v=story-model-20260926"></script>
 <script src="/static/workspace-main.js?v=20260926-complete-render-v29"></script>
 <script src="/static/node-manager.js"></script>
+<script src="/static/system-update.js?v=1"></script>
 <script src="/static/studio-shell.js?v=20260926-complete-render-v29"></script>
 </body>
 </html>
